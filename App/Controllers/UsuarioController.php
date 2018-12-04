@@ -15,10 +15,9 @@ final class UsuarioController
         
         if (is_null($data['usuario']) || empty($data['usuario'])){
             $response = $response->withJson([
-                "erro" => "true",
-                "message" => "Usuario não informado"
-            ], 
-            400); //400 Bad Request
+                "status" => "error",
+                "message" => "Usuario não autenticado"
+            ], 401); //401 Unauthorized
             return $response;
         }
         
@@ -48,12 +47,18 @@ final class UsuarioController
             $usuario->setMobileLastLogin($data['mobileLastLogin']);
         }
 
-        $usuarioDAO->updateUsuario($usuario);
-
-        $response = $response->withJson([
-            "erro" => "false",
-            'message' => 'Localizacao do usuario atualizada'
-        ]);
+        $result = $usuarioDAO->updateUsuario($usuario);
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => 'Localizacao do usuario atualizada'
+            ]);
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                'message' => 'Localizacao do usuario NAO atualizada'
+            ]);
+        }
         
         return $response;
     }

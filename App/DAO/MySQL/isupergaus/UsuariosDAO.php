@@ -40,8 +40,9 @@ class UsuariosDAO extends Conexao
         return $usuario;
     }
 
-    public function updateUsuario(UsuarioModel $usuario)
+    public function updateUsuario(UsuarioModel $usuario): bool
     {
+        $result = FALSE;
         $fields = $params = array();
 
         if (!is_null($usuario->getMobileDevice())){
@@ -81,7 +82,7 @@ class UsuariosDAO extends Conexao
         }
 
         $statement = $this->pdo->prepare($query);
-        $statement->execute($params);
+        $result = $statement->execute($params);
 
         /*
         $statement = $this->pdo
@@ -105,5 +106,6 @@ class UsuariosDAO extends Conexao
             'usuario' => $usuario->getUsuario() 
         ]);
         */
+        return $result;
     }
 }

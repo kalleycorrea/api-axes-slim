@@ -22,6 +22,20 @@ $app->add(function($request, $response, $next){
 
 // =========================================
 
+// Enable CORS
+// https://www.slimframework.com/docs/v3/cookbook/enable-cors.html
+$app->options('/{routes:.+}', function ($request, $response, $args) {
+    return $response;
+});
+
+$app->add(function ($req, $res, $next) {
+    $response = $next($req, $res);
+    return $response
+            ->withHeader('Access-Control-Allow-Origin', '*')
+            ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization')
+            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+});
+
 $app->get('/', function($request, $response, $args){
     //Psr\Http\Message\ServerRequestInterface as Request;
     //Request $request
