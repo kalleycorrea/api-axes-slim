@@ -3,6 +3,7 @@
 use function src\slimConfiguration;
 use App\Controllers\LoginController;
 use App\Controllers\UsuarioController;
+use App\Controllers\AtendimentoController;
 
 $app = new \Slim\App(slimConfiguration());
 
@@ -36,6 +37,7 @@ $app->add(function ($req, $res, $next) {
             ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
 });
 
+// ROUTES
 $app->get('/', function($request, $response, $args){
     //Psr\Http\Message\ServerRequestInterface as Request;
     //Request $request
@@ -60,6 +62,8 @@ $app->post('/', function($request, $response, $args){
 
 $app->post('/loginappinfra', LoginController::class . ':loginAppInfra');
 $app->patch('/usuariolocalizacao', UsuarioController::class . ':updateLocalizacao');
+
+$app->post('/atendimentomodulotecnico', AtendimentoController::class . ':getModuloTecnico');
 
 // =========================================
 

@@ -12,7 +12,8 @@ final class LoginController
     {
         $data = $request->getParsedBody();
 
-        if (is_null($data['usuario']) || empty($data['usuario'])){
+        if (is_null($data['usuario']) || empty($data['usuario']) || 
+            is_null($data['senha']) || empty($data['senha'])){
             $response = $response->withJson([
                 "status" => "error",
                 "message" => "Usuario não autenticado"
@@ -21,7 +22,7 @@ final class LoginController
         }
 
         $usuarioDAO = new UsuariosDAO();
-        $usuario = $usuarioDAO->getUsuario($data['usuario']);
+        $usuario = $usuarioDAO->getUsuario($data['usuario'], $data['senha']);
         
         if (!empty($usuario)){
             $response = $response->withJson([

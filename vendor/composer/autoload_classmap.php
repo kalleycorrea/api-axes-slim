@@ -6,7 +6,13 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'App\\Controllers\\AtendimentoController' => $baseDir . '/App/Controllers/AtendimentoController.php',
     'App\\Controllers\\LoginController' => $baseDir . '/App/Controllers/LoginController.php',
+    'App\\Controllers\\UsuarioController' => $baseDir . '/App/Controllers/UsuarioController.php',
+    'App\\DAO\\MySQL\\isupergaus\\AtendimentosDAO' => $baseDir . '/App/DAO/MySQL/isupergaus/AtendimentosDAO.php',
+    'App\\DAO\\MySQL\\isupergaus\\Conexao' => $baseDir . '/App/DAO/MySQL/isupergaus/Conexao.php',
+    'App\\DAO\\MySQL\\isupergaus\\UsuariosDAO' => $baseDir . '/App/DAO/MySQL/isupergaus/UsuariosDAO.php',
+    'App\\Models\\MySQL\\isupergaus\\UsuarioModel' => $baseDir . '/App/Models/MySQL/isupergaus/UsuarioModel.php',
     'FastRoute\\BadRouteException' => $vendorDir . '/nikic/fast-route/src/BadRouteException.php',
     'FastRoute\\DataGenerator' => $vendorDir . '/nikic/fast-route/src/DataGenerator.php',
     'FastRoute\\DataGenerator\\CharCountBased' => $vendorDir . '/nikic/fast-route/src/DataGenerator/CharCountBased.php',

@@ -72,7 +72,13 @@ class ComposerStaticInitaf64349aea73b2ad0704963a1fa90fc0
     );
 
     public static $classMap = array (
+        'App\\Controllers\\AtendimentoController' => __DIR__ . '/../..' . '/App/Controllers/AtendimentoController.php',
         'App\\Controllers\\LoginController' => __DIR__ . '/../..' . '/App/Controllers/LoginController.php',
+        'App\\Controllers\\UsuarioController' => __DIR__ . '/../..' . '/App/Controllers/UsuarioController.php',
+        'App\\DAO\\MySQL\\isupergaus\\AtendimentosDAO' => __DIR__ . '/../..' . '/App/DAO/MySQL/isupergaus/AtendimentosDAO.php',
+        'App\\DAO\\MySQL\\isupergaus\\Conexao' => __DIR__ . '/../..' . '/App/DAO/MySQL/isupergaus/Conexao.php',
+        'App\\DAO\\MySQL\\isupergaus\\UsuariosDAO' => __DIR__ . '/../..' . '/App/DAO/MySQL/isupergaus/UsuariosDAO.php',
+        'App\\Models\\MySQL\\isupergaus\\UsuarioModel' => __DIR__ . '/../..' . '/App/Models/MySQL/isupergaus/UsuarioModel.php',
         'FastRoute\\BadRouteException' => __DIR__ . '/..' . '/nikic/fast-route/src/BadRouteException.php',
         'FastRoute\\DataGenerator' => __DIR__ . '/..' . '/nikic/fast-route/src/DataGenerator.php',
         'FastRoute\\DataGenerator\\CharCountBased' => __DIR__ . '/..' . '/nikic/fast-route/src/DataGenerator/CharCountBased.php',

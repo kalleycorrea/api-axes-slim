@@ -12,7 +12,7 @@ class UsuariosDAO extends Conexao
         parent::__construct();
     }
 
-    public function getUsuario($paramUsuario): array
+    public function getUsuario($paramUsuario, $paramSenha): array
     {
         /*
         $usuario = $this->pdo
@@ -27,14 +27,16 @@ class UsuariosDAO extends Conexao
             ->fetchAll(\PDO::FETCH_ASSOC);
         */
         $statement = $this->pdo
-            ->prepare("SELECT usuario, Nome, situacao, idgrupo, perfil, 
+            ->prepare("SELECT usuario, Nome, master, idgrupo, perfil, 
             MobileDevice, MobileTrackingTrace, MobileDeviceId, Latitude, Longitude, 
             MobileLastDataReceived, MobileLastLogin, 
             concat('https://rbx.axes.com.br/routerbox/file/img/',if(ifnull(Foto,'')='','contact_default.png',Foto)) as Foto 
             FROM usuarios 
-            WHERE usuario = :usuario;");
+            WHERE ((idgrupo = 4 and perfil in (7,19)) OR (idgrupo = 4 and master = 'S') OR (usuario='kalley'))
+            AND usuario = :usuario AND Terminal = :terminal AND situacao = 'A' ;");
 
         $statement->bindParam(':usuario', $paramUsuario, \PDO::PARAM_STR);
+        $statement->bindParam(':terminal', $paramSenha, \PDO::PARAM_STR);
         $statement->execute();
         $usuario = $statement->fetchAll(\PDO::FETCH_ASSOC);
         return $usuario;
