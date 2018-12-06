@@ -8,11 +8,9 @@ use App\DAO\MySQL\isupergaus\AtendimentosDAO;
 
 final class AtendimentoController
 {
-    public function getModuloTecnico(Request $request, Response $response, array $args): Response
+    public function getAtendimentoTecnico(Request $request, Response $response, array $args): Response
     {
-        $data = $request->getParsedBody();
-
-        if (is_null($data['usuario']) || empty($data['usuario'])){
+        if (is_null($request->getQueryParams()['usuario']) || empty($request->getQueryParams()['usuario'])){
             $response = $response->withJson([
                 "status" => "error",
                 "message" => "Usuario não autenticado"
@@ -21,7 +19,7 @@ final class AtendimentoController
         }
 
         $atendimentosDAO = new AtendimentosDAO();
-        $atendimento = $atendimentosDAO->getAtendimentosModuloTecnico($data['usuario']);
+        $atendimento = $atendimentosDAO->getModuloTecnico($request->getQueryParams()['usuario']);
         
         if (!empty($atendimento)){
             $response = $response->withJson($atendimento, 200); //200 OK

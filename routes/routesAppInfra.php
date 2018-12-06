@@ -62,8 +62,7 @@ $app->post('/', function($request, $response, $args){
 
 $app->post('/loginappinfra', LoginController::class . ':loginAppInfra');
 $app->patch('/usuariolocalizacao', UsuarioController::class . ':updateLocalizacao');
-
-$app->post('/atendimentomodulotecnico', AtendimentoController::class . ':getModuloTecnico');
+$app->get('/atendimentotecnico', AtendimentoController::class . ':getAtendimentoTecnico');
 
 // =========================================
 

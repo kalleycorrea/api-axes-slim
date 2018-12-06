@@ -9,7 +9,7 @@ class AtendimentosDAO extends Conexao
         parent::__construct();
     }
 
-    public function getAtendimentosModuloTecnico($paramUsuario): array
+    public function getModuloTecnico($paramUsuario): array
     {
         $statement = $this->pdo
             ->prepare("SELECT a.Protocolo, c.Codigo CodCliente, c.Nome Cliente, a.Contrato, t.Descricao Topico, 
