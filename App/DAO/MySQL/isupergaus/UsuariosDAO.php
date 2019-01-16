@@ -15,7 +15,7 @@ class UsuariosDAO extends Conexao
     public function getUsuario($paramUsuario, $paramSenha): array
     {
         /*
-        $usuario = $this->pdo
+        $usuario = $this->pdoRbx
             ->query('SELECT
                     usuario,
                     Nome,
@@ -26,20 +26,58 @@ class UsuariosDAO extends Conexao
                 FROM usuarios WHERE usuario=\'kalley\';')
             ->fetchAll(\PDO::FETCH_ASSOC);
         */
-        $statement = $this->pdo
-            ->prepare("SELECT usuario, Nome, master, idgrupo, perfil, 
-            MobileDevice, MobileTrackingTrace, MobileDeviceId, Latitude, Longitude, 
-            MobileLastDataReceived, MobileLastLogin, 
+        $statement = $this->pdoRbx
+            ->prepare("SELECT usuario, Terminal senha, Nome, idgrupo, 
+            if(master='S','G',if(perfil=19,'A','T')) as tipo, 
+            MobileDevice, MobileTrackingTrace, MobileDeviceId, Latitude, Longitude, MobileLastDataReceived, MobileLastLogin, 
             concat('https://rbx.axes.com.br/routerbox/file/img/',if(ifnull(Foto,'')='','contact_default.png',Foto)) as Foto 
             FROM usuarios 
-            WHERE ((idgrupo = 4 and perfil in (7,19)) OR (idgrupo = 4 and master = 'S') OR (usuario='kalley'))
-            AND usuario = :usuario AND Terminal = :terminal AND situacao = 'A' ;");
+            WHERE usuario = :usuario AND Terminal = :senha AND situacao = 'A' ;");
 
         $statement->bindParam(':usuario', $paramUsuario, \PDO::PARAM_STR);
-        $statement->bindParam(':terminal', $paramSenha, \PDO::PARAM_STR);
+        $statement->bindParam(':senha', $paramSenha, \PDO::PARAM_STR);
         $statement->execute();
         $usuario = $statement->fetchAll(\PDO::FETCH_ASSOC);
         return $usuario;
+
+        // Utilizar a senha do banco de dados auxiliar
+        /*
+        if (!empty($usuario)){
+            $statement2 = $this->pdoAxes
+            ->prepare("SELECT usuario 
+            FROM usuarios 
+            WHERE usuario = :usuario AND senha = :senha ;");
+            $statement2->bindParam(':usuario', $paramUsuario, \PDO::PARAM_STR);
+            $statement2->bindParam(':senha', $paramSenha, \PDO::PARAM_STR);
+            $statement2->execute();
+            $usuario2 = $statement2->fetchAll(\PDO::FETCH_ASSOC);
+            if (!empty($usuario2)){
+                //$usuario = array_merge($usuario, array('setpassword' => 'N'));
+                //array_push($usuario, array('setpassword' => 'N'));
+                //$usuario += ['setpassword' => 'N'];
+                //return $usuario;
+                $result = [];
+                foreach ($usuario as $campo) {
+                    $result += $campo;
+                }
+                $result += ['setpassword' => 'N'];
+                return $result;
+            }
+            else{
+                //$usuario = array_merge($usuario, array('setpassword' => 'S'));
+                //array_push($usuario, array('setpassword' => 'S'));
+                //$usuario += ['setpassword' => 'S'];
+                //return $usuario;
+                $result = [];
+                foreach ($usuario as $campo) {
+                    $result += $campo;
+                }
+                $result += ['setpassword' => 'S'];
+                return $result;
+            }
+        }
+        return [];
+        */
     }
 
     public function updateUsuario(UsuarioModel $usuario): bool
@@ -83,11 +121,11 @@ class UsuariosDAO extends Conexao
             $query .=  implode(', ', $fields) . ' WHERE usuario = :usuario';
         }
 
-        $statement = $this->pdo->prepare($query);
+        $statement = $this->pdoRbx->prepare($query);
         $result = $statement->execute($params);
 
         /*
-        $statement = $this->pdo
+        $statement = $this->pdoRbx
             ->prepare('UPDATE usuarios SET 
                 MobileDevice = :mobileDevice, 
                 MobileTrackingTrace = :mobileTrackingTrace, 
@@ -109,5 +147,9 @@ class UsuariosDAO extends Conexao
         ]);
         */
         return $result;
+    }
+
+    private function setPassword(){
+
     }
 }

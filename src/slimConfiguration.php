@@ -7,7 +7,14 @@ function slimConfiguration(): \Slim\Container
     $configuration = [
         'settings' => [
             'displayErrorDetails' => getenv('DISPLAY_ERRORS_DETAILS'),
+            // Monolog settings
+            //'logger' => [
+            //    'name' => 'API-Axes-Slim',
+            //    'path' => __DIR__ . '/logs/app.log',
+            //],
         ],
     ];
-    return new \Slim\Container($configuration);
+    $container = new \Slim\Container($configuration);
+    
+    return $container;
 }

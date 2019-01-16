@@ -7,20 +7,38 @@ abstract class Conexao
     /**
      * @var \PDO
      */
-    protected $pdo;
+    protected $pdoRbx;
+    /**
+     * @var \PDO
+     */
+    protected $pdoAxes;
 
     public function __construct()
     {
-        $host = getenv('AXES_DB_MYSQL_HOST');
-        $port = getenv('AXES_DB_MYSQL_PORT');
-        $user = getenv('AXES_DB_MYSQL_USER');
-        $pass = getenv('AXES_DB_MYSQL_PASSWORD');
-        $dbname = getenv('AXES_DB_MYSQL_DBNAME');
+        $hostRbx = getenv('MYSQL_HOST_RBX');
+        $portRbx = getenv('MYSQL_PORT_RBX');
+        $userRbx = getenv('MYSQL_USER_RBX');
+        $passRbx = getenv('MYSQL_PASSWORD_RBX');
+        $dbnameRbx = getenv('MYSQL_DBNAME_RBX');
 
-        $dsn = "mysql:host={$host};dbname={$dbname};port={$port};charset=UTF8";
+        $dsnRbx = "mysql:host={$hostRbx};dbname={$dbnameRbx};port={$portRbx};charset=UTF8";
 
-        $this->pdo = new \PDO($dsn, $user, $pass);
-        $this->pdo->setAttribute(
+        $this->pdoRbx = new \PDO($dsnRbx, $userRbx, $passRbx);
+        $this->pdoRbx->setAttribute(
+            \PDO::ATTR_ERRMODE,
+            \PDO::ERRMODE_EXCEPTION
+        );
+
+        $hostAxes = getenv('MYSQL_HOST_AXES');
+        $portAxes = getenv('MYSQL_PORT_AXES');
+        $userAxes = getenv('MYSQL_USER_AXES');
+        $passAxes = getenv('MYSQL_PASSWORD_AXES');
+        $dbnameAxes = getenv('MYSQL_DBNAME_AXES');
+
+        $dsnAxes = "mysql:host={$hostAxes};dbname={$dbnameAxes};port={$portAxes};charset=UTF8";
+
+        $this->pdoAxes = new \PDO($dsnAxes, $userAxes, $passAxes);
+        $this->pdoAxes->setAttribute(
             \PDO::ATTR_ERRMODE,
             \PDO::ERRMODE_EXCEPTION
         );
