@@ -8,7 +8,7 @@ use App\DAO\MySQL\isupergaus\AtendimentosDAO;
 
 final class AtendimentoController
 {
-    public function listaAtendimentos(Request $request, Response $response, array $args): Response
+    public function getAtendimentos(Request $request, Response $response, array $args): Response
     {
         //Quando estava fazendo a requisição por GET
         // if (is_null($request->getQueryParams()['usuario']) || empty($request->getQueryParams()['usuario'])){
@@ -30,6 +30,27 @@ final class AtendimentoController
             $response = $response->withJson([
                 "status" => "error",
                 "message" => "no records"
+            ], 200);
+        }
+        return $response;
+    }
+
+    public function updateSituacaoOS(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $atendimentosDAO = new AtendimentosDAO();
+        $result = $atendimentosDAO->updateSituacaoOS($data['usuario'], $data['numAtendimento'], 
+            $data['situacaoOS'], $data['situacaoOSAnterior']);
+
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => 'Situação da OS atualizada'
+            ], 200);
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                'message' => 'Situação da OS NAO atualizada'
             ], 200);
         }
         return $response;

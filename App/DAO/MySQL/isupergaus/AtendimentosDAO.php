@@ -9,7 +9,7 @@ class AtendimentosDAO extends Conexao
         parent::__construct();
     }
 
-    public function getAtendimentos($paramUsuario, $paramTipo, $paramGrupo): array
+    public function getAtendimentos($pUsuario, $pTipo, $pGrupo): array
     {
         $strSQL = "SELECT a.Numero NumAtendimento, a.Protocolo, c.Codigo CodCliente, 
         c.Nome Cliente, c.Sigla Apelido, a.Contrato, t.Descricao Topico, a.Prioridade, 
@@ -43,7 +43,7 @@ class AtendimentosDAO extends Conexao
                 when 'B' then 'Abortada' 
                 when 'C' then 'Concluída' 
                 when 'E' then 'Em Execução' 
-                when 'F' then 'Na fila' 
+                when 'F' then 'Na Fila' 
                 when 'P' then 'Pausada'
                 else ' ' END as DescSituacaoOS 
         FROM isupergaus.Atendimentos a 
@@ -58,19 +58,86 @@ class AtendimentosDAO extends Conexao
         WHERE a.Situacao = 'A'";
 
         //Atendimentos visualizados pelo técnico
-        $whereTecnico = " and (a.Usu_Designado = ".$paramUsuario." or a.Grupo_Designado = ".$paramGrupo.")";
+        $whereTecnico = " and (a.Usu_Designado = ".$pUsuario." or a.Grupo_Designado = ".$pGrupo.")";
         //Atendimentos visualizados pelo Gestor
-        $whereGestor = " and (a.Usu_Designado in (select u2.usuario from isupergaus.usuarios u2 where u2.idgrupo = ".$paramGrupo.") or a.Grupo_Designado = ".$paramGrupo.")";
-        $where = ($paramTipo == 'T') ? $whereTecnico : $whereGestor;
+        $whereGestor = " and (a.Usu_Designado in (select u2.usuario from isupergaus.usuarios u2 where u2.idgrupo = ".$pGrupo.") or a.Grupo_Designado = ".$pGrupo.")";
+        $where = ($pTipo == 'T') ? $whereTecnico : $whereGestor;
 
         $orderBy = " order by a.Prioridade, date_format(concat(a.Data_AB,' ',a.Hora_AB), '%d/%m/%Y %H:%i:%s')";
 
         $statement = $this->pdoRbx
             ->prepare($strSQL . $where . $orderBy);
-        //$statement->bindParam(':usuario', $paramUsuario, \PDO::PARAM_STR);
-        //$statement->bindParam(':grupo', $paramGrupo, \PDO::PARAM_STR);
+        //$statement->bindParam(':usuario', $pUsuario, \PDO::PARAM_STR);
+        //$statement->bindParam(':grupo', $pGrupo, \PDO::PARAM_STR);
         $statement->execute();
         $atendimentos = $statement->fetchAll(\PDO::FETCH_ASSOC);
         return $atendimentos;
+    }
+
+    public function updateSituacaoOS($pUsuario, $pNumAtendimento, $pSituacaoOS, $pSituacaoAnterior): bool
+    {
+        $result = FALSE;
+
+        $statement = $this->pdoRbx
+            ->prepare('UPDATE Atendimentos SET 
+                SituacaoOS = :situacaoOS 
+                WHERE Numero = :numAtendimento;');
+        $result = $statement->execute([
+            'situacaoOS' => $pSituacaoOS,
+            'numAtendimento' => $pNumAtendimento 
+            ]);
+        if ($result == TRUE) {
+            // Update Ocorrências
+            $descricao='';
+            $descSituacao = $this->getSituacaoOS($pSituacaoOS);
+            $descSituacaoAnterior = $this->getSituacaoOS($pSituacaoAnterior);
+            if (empty($descSituacaoAnterior)) {
+                if (!empty($descSituacao)) {
+                    $descricao = "Situação da OS alterada para ".$descSituacao;
+                }
+            } else {
+                if (!empty($descSituacao)) {
+                    $descricao = "Situação da OS alterada de ".$descSituacaoAnterior." para ".$descSituacao;
+                }
+            }
+            $statement2 = $this->pdoRbx
+            ->prepare("INSERT INTO AtendUltAlteracao (Atendimento, Usuario, Descricao, Data, Modo) 
+                        VALUES (:atendimento, :usuario, :descricao, now(), 'A')");
+            $result2 = $statement2->execute([
+                'atendimento' => $pNumAtendimento,
+                'usuario' => $pUsuario, 
+                'descricao' => $descricao 
+                ]);
+        }
+        return $result;
+    }
+    private function getSituacaoOS($pSituacaoOS)
+    {
+        $result='';
+        switch ($pSituacaoOS) {
+            case '':
+            case ' ':
+                $result='';
+                break;
+            case 'A':
+                $result='A Caminho';
+                break;
+            case 'B':
+                $result='Abortada';
+                break;
+            case 'C':
+                $result='Concluída';
+                break;
+            case 'E':
+                $result='Em Execução';
+                break;
+            case 'F':
+                $result='Na Fila';
+                break;
+            case 'P':
+                $result='Pausada';
+                break;
+        }
+        return $result;
     }
 }

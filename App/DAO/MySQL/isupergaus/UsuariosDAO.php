@@ -12,7 +12,7 @@ class UsuariosDAO extends Conexao
         parent::__construct();
     }
 
-    public function getUsuario($paramUsuario, $paramSenha): array
+    public function getUsuario($pUsuario, $pSenha): array
     {
         /*
         $usuario = $this->pdoRbx
@@ -34,8 +34,8 @@ class UsuariosDAO extends Conexao
             FROM usuarios 
             WHERE usuario = :usuario AND Terminal = :senha AND situacao = 'A' ;");
 
-        $statement->bindParam(':usuario', $paramUsuario, \PDO::PARAM_STR);
-        $statement->bindParam(':senha', $paramSenha, \PDO::PARAM_STR);
+        $statement->bindParam(':usuario', $pUsuario, \PDO::PARAM_STR);
+        $statement->bindParam(':senha', $pSenha, \PDO::PARAM_STR);
         $statement->execute();
         $usuario = $statement->fetchAll(\PDO::FETCH_ASSOC);
         return $usuario;
@@ -47,8 +47,8 @@ class UsuariosDAO extends Conexao
             ->prepare("SELECT usuario 
             FROM usuarios 
             WHERE usuario = :usuario AND senha = :senha ;");
-            $statement2->bindParam(':usuario', $paramUsuario, \PDO::PARAM_STR);
-            $statement2->bindParam(':senha', $paramSenha, \PDO::PARAM_STR);
+            $statement2->bindParam(':usuario', $pUsuario, \PDO::PARAM_STR);
+            $statement2->bindParam(':senha', $pSenha, \PDO::PARAM_STR);
             $statement2->execute();
             $usuario2 = $statement2->fetchAll(\PDO::FETCH_ASSOC);
             if (!empty($usuario2)){
