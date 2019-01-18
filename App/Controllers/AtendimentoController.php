@@ -21,11 +21,11 @@ final class AtendimentoController
 
         $data = $request->getParsedBody();
         $atendimentosDAO = new AtendimentosDAO();
-        //$atendimento = $atendimentosDAO->getModuloTecnico($request->getQueryParams()['usuario']);
-        $atendimento = $atendimentosDAO->getAtendimentos($data['usuario'], $data['tipo'], $data['grupo']);
+        //$atendimentos = $atendimentosDAO->getModuloTecnico($request->getQueryParams()['usuario']);
+        $atendimentos = $atendimentosDAO->getAtendimentos($data['usuario'], $data['tipo'], $data['grupo']);
 
-        if (!empty($atendimento)){
-            $response = $response->withJson($atendimento, 200); //200 OK
+        if (!empty($atendimentos)){
+            $response = $response->withJson($atendimentos, 200); //200 OK
         }else{
             $response = $response->withJson([
                 "status" => "error",
@@ -51,6 +51,23 @@ final class AtendimentoController
             $response = $response->withJson([
                 "status" => "error",
                 'message' => 'Situação da OS NAO atualizada'
+            ], 200);
+        }
+        return $response;
+    }
+
+    public function getOcorrencias(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $atendimentosDAO = new AtendimentosDAO();
+        $ocorrencias = $atendimentosDAO->getOcorrencias($data['numAtendimento']);
+
+        if (!empty($ocorrencias)){
+            $response = $response->withJson($ocorrencias, 200); //200 OK
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                "message" => "no records"
             ], 200);
         }
         return $response;

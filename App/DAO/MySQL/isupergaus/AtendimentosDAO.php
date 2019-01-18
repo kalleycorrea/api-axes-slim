@@ -65,8 +65,7 @@ class AtendimentosDAO extends Conexao
 
         $orderBy = " order by a.Prioridade, date_format(concat(a.Data_AB,' ',a.Hora_AB), '%d/%m/%Y %H:%i:%s')";
 
-        $statement = $this->pdoRbx
-            ->prepare($strSQL . $where . $orderBy);
+        $statement = $this->pdoRbx->prepare($strSQL . $where . $orderBy);
         //$statement->bindParam(':usuario', $pUsuario, \PDO::PARAM_STR);
         //$statement->bindParam(':grupo', $pGrupo, \PDO::PARAM_STR);
         $statement->execute();
@@ -111,6 +110,7 @@ class AtendimentosDAO extends Conexao
         }
         return $result;
     }
+
     private function getSituacaoOS($pSituacaoOS)
     {
         $result='';
@@ -139,5 +139,19 @@ class AtendimentosDAO extends Conexao
                 break;
         }
         return $result;
+    }
+
+    public function getOcorrencias($pNumAtendimento): array
+    {
+        $strSQL = "select Usuario, Modo, Descricao, 
+        -- replace(replace(replace(Descricao, '<b>', ''),'</b>',''),'<BR>','') Descricao,
+        if(Modo='A', 'Automático', 'Manual') as DescModo, 
+        date_format(Data, '%d/%m/%Y %H:%i:%s') Data 
+        from AtendUltAlteracao where Atendimento = ".$pNumAtendimento." order by Id desc";
+
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $ocorrencias = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $ocorrencias;
     }
 }

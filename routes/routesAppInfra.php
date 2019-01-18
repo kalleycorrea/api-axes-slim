@@ -153,6 +153,7 @@ $app->post('/', function($request, $response, $args){
 $app->post('/loginappaxesos', LoginController::class . ':loginAppAxesOS')->add($mwAuthPost);
 $app->post('/getatendimentos', AtendimentoController::class . ':getAtendimentos')->add($mwAuthPost);
 $app->post('/updatesituacaoos', AtendimentoController::class . ':updateSituacaoOS')->add($mwAuthPost);
+$app->post('/getocorrencias', AtendimentoController::class . ':getOcorrencias')->add($mwAuthPost);
 $app->patch('/usuariolocalizacao', UsuarioController::class . ':updateLocalizacao');
 // =========================================
 
