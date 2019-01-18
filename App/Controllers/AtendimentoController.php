@@ -72,4 +72,24 @@ final class AtendimentoController
         }
         return $response;
     }
+
+    public function addOcorrencia(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $atendimentosDAO = new AtendimentosDAO();
+        $result = $atendimentosDAO->addOcorrencia($data['usuario'], $data['numAtendimento'], $data['descricao']);
+
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => 'Ocorrência Inserida'
+            ], 200);
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                'message' => 'Falha na inserção da Ocorrência'
+            ], 502); //502 Bad Gateway
+        }
+        return $response;
+    }
 }

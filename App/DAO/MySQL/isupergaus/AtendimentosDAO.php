@@ -154,4 +154,18 @@ class AtendimentosDAO extends Conexao
         $ocorrencias = $statement->fetchAll(\PDO::FETCH_ASSOC);
         return $ocorrencias;
     }
+
+    public function addOcorrencia($pUsuario, $pNumAtendimento, $pDescricao): bool
+    {
+        $result = FALSE;
+        $statement = $this->pdoRbx
+        ->prepare("INSERT INTO AtendUltAlteracao (Atendimento, Usuario, Descricao, Data, Modo) 
+                    VALUES (:atendimento, :usuario, :descricao, now(), 'M')");
+        $result = $statement->execute([
+            'atendimento' => $pNumAtendimento,
+            'usuario' => $pUsuario, 
+            'descricao' => $pDescricao 
+            ]);
+        return $result;
+    }
 }
