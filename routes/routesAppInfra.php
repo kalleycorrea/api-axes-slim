@@ -155,6 +155,8 @@ $app->post('/getatendimentos', AtendimentoController::class . ':getAtendimentos'
 $app->post('/updatesituacaoos', AtendimentoController::class . ':updateSituacaoOS')->add($mwAuthPost);
 $app->post('/getocorrencias', AtendimentoController::class . ':getOcorrencias')->add($mwAuthPost);
 $app->post('/addocorrencia', AtendimentoController::class . ':addOcorrencia')->add($mwAuthPost);
+$app->post('/getdadosadicionais', AtendimentoController::class . ':getDadosAdicionais')->add($mwAuthPost);
+$app->post('/getdadosadicionaisvalores', AtendimentoController::class . ':getDadosAdicionaisValores')->add($mwAuthPost);
 $app->patch('/usuariolocalizacao', UsuarioController::class . ':updateLocalizacao');
 // =========================================
 

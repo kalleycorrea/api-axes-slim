@@ -92,4 +92,37 @@ final class AtendimentoController
         }
         return $response;
     }
+
+    public function getDadosAdicionais(Request $request, Response $response, array $args): Response
+    {
+        $atendimentosDAO = new AtendimentosDAO();
+        $dadosAdicionais = $atendimentosDAO->getDadosAdicionais();
+
+        if (!empty($dadosAdicionais)){
+            $response = $response->withJson($dadosAdicionais, 200); //200 OK
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                "message" => "no records"
+            ], 200);
+        }
+        return $response;
+    }
+
+    public function getDadosAdicionaisValores(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $atendimentosDAO = new AtendimentosDAO();
+        $dadosAdicionaisVal = $atendimentosDAO->getDadosAdicionaisValores($data['numAtendimento']);
+
+        if (!empty($dadosAdicionaisVal)){
+            $response = $response->withJson($dadosAdicionaisVal, 200); //200 OK
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                "message" => "no records"
+            ], 200);
+        }
+        return $response;
+    }
 }

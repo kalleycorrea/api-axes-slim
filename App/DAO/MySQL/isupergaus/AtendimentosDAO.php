@@ -12,9 +12,10 @@ class AtendimentosDAO extends Conexao
     public function getAtendimentos($pUsuario, $pTipo, $pGrupo): array
     {
         $strSQL = "SELECT a.Numero NumAtendimento, a.Protocolo, c.Codigo CodCliente, 
-        c.Nome Cliente, c.Sigla Apelido, a.Contrato, t.Descricao Topico, a.Prioridade, 
+        c.Nome Cliente, c.Sigla Apelido, a.Contrato, p.DescricaoComercial Plano, t.Descricao Topico, 
+        a.Prioridade, a.Assunto, a.Solucao, 
         date_format(concat(a.Data_AB,' ',a.Hora_AB), '%d/%m/%Y %H:%i') Abertura,
-        replace(isupergaus.rbx_sla(a.Numero, 'N'),'?','ú') SLA,  
+        replace(isupergaus.rbx_sla(a.Numero, 'N'),'?','ú') SLA, 
         g.Nome GrupoCliente, 
         if (e.Endereco is null, c.Endereco, e.Endereco) as Endereco, 
         if (e.Endereco is null, c.Numero, e.Numero) as Numero,
@@ -25,7 +26,9 @@ class AtendimentosDAO extends Conexao
         if (e.Endereco is null, c.UF, e.UF) as Estado,
         if (e.Endereco is null, c.MapsLat, e.MapsLat) as MapsLat,
         if (e.Endereco is null, c.MapsLng, e.MapsLng) as MapsLng,
+        a.Usu_Abertura, 
         a.Usu_Designado, 
+        a.Usuario_BX, 
         a.Grupo_Designado,
         ct.Situacao,
         case ct.Situacao 
@@ -166,6 +169,35 @@ class AtendimentosDAO extends Conexao
             'usuario' => $pUsuario, 
             'descricao' => $pDescricao 
             ]);
+        return $result;
+    }
+
+    public function getDadosAdicionais(): array
+    {
+        $strSQL = "select a.Codigo CodigoCampo, a.Nome, a.TipoDado, a.Lista, a.ListaDesc, 
+        a.Tamanho, a.Obrigatorio, a.Ajuda 
+        from isupergaus.CamposComplementares a 
+        where a.Tabela = 'Contratos' and a.Codigo not in (46,48,50) order by a.Codigo";
+
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $result;
+    }
+
+    public function getDadosAdicionaisValores($pNumAtendimento): array
+    {
+        $strSQL = "select a.Codigo CodigoCampo, a.Nome, b.Id, b.Chave Contrato, b.Valor 
+        from CamposComplementares a 
+        left join CamposComplementaresValores b on a.Codigo = b.Complemento 
+        left join Contratos c on b.Chave = c.Numero 
+        left join Atendimentos d on b.Chave = d.Contrato 
+        where a.Tabela = 'Contratos' and a.Codigo not in (46,48,50) and d.Numero = ".$pNumAtendimento." 
+        order by a.Codigo";
+
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
         return $result;
     }
 }
