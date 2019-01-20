@@ -174,10 +174,10 @@ class AtendimentosDAO extends Conexao
 
     public function getDadosAdicionais(): array
     {
-        $strSQL = "select a.Codigo CodigoCampo, a.Nome, a.TipoDado, a.Lista, a.ListaDesc, 
-        a.Tamanho, a.Obrigatorio, a.Ajuda 
+        $strSQL = "select a.Codigo CodigoCampo, a.Nome, a.TipoDado, a.Lista, '' Valor, '' Id 
+        -- a.ListaDesc, a.Tamanho, a.Obrigatorio, a.Ajuda 
         from isupergaus.CamposComplementares a 
-        where a.Tabela = 'Contratos' and a.Codigo not in (46,48,50) order by a.Codigo";
+        where a.Tabela = 'Contratos' and a.Codigo < 45 order by a.Codigo";
 
         $statement = $this->pdoRbx->prepare($strSQL);
         $statement->execute();
@@ -192,12 +192,49 @@ class AtendimentosDAO extends Conexao
         left join CamposComplementaresValores b on a.Codigo = b.Complemento 
         left join Contratos c on b.Chave = c.Numero 
         left join Atendimentos d on b.Chave = d.Contrato 
-        where a.Tabela = 'Contratos' and a.Codigo not in (46,48,50) and d.Numero = ".$pNumAtendimento." 
+        where a.Tabela = 'Contratos' and a.Codigo < 45 and d.Numero = ".$pNumAtendimento." 
         order by a.Codigo";
 
         $statement = $this->pdoRbx->prepare($strSQL);
         $statement->execute();
         $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $result;
+    }
+
+    public function saveDadosAdicionais($pDadosAdicionais): bool
+    {
+        $result = FALSE;
+        $contrato = $pDadosAdicionais[0]['contrato'] ?? '';
+
+        if (is_null($contrato) || empty($contrato)) {
+            return FALSE;
+        }
+
+        foreach ($pDadosAdicionais as $rows) { 
+            if (isset($rows['CodigoCampo']) && !empty($rows['CodigoCampo'])) {
+
+                if (empty($rows['Id'])) {
+                    $statement = $this->pdoRbx
+                    ->prepare("INSERT INTO CamposComplementaresValores (Complemento, Tabela, Chave, Valor) 
+                                VALUES (:complemento, :tabela, :chave, :valor)");
+                    $result = $statement->execute([
+                        'complemento' => $rows['CodigoCampo'], 
+                        'tabela' => 'Contratos', 
+                        'chave' => $contrato, 
+                        'valor' => $rows['Valor'] 
+                        ]);
+                } else {
+                    $statement = $this->pdoRbx
+                    ->prepare('UPDATE CamposComplementaresValores SET 
+                        Valor = :valor 
+                        WHERE id = :id;');
+                    $result = $statement->execute([
+                    'valor' => $rows['Valor'],
+                    'id' => $rows['Id'] 
+                    ]);
+                }
+            }
+        }
         return $result;
     }
 }

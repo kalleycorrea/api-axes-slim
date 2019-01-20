@@ -45,12 +45,12 @@ final class AtendimentoController
         if ($result == TRUE){
             $response = $response->withJson([
                 "status" => "success",
-                'message' => 'Situação da OS atualizada'
+                'message' => "Situação da OS atualizada"
             ], 200);
         }else{
             $response = $response->withJson([
                 "status" => "error",
-                'message' => 'Situação da OS NAO atualizada'
+                'message' => "Situação da OS NAO atualizada"
             ], 200);
         }
         return $response;
@@ -82,12 +82,12 @@ final class AtendimentoController
         if ($result == TRUE){
             $response = $response->withJson([
                 "status" => "success",
-                'message' => 'Ocorrência Inserida'
+                'message' => "Ocorrência Inserida"
             ], 200);
         }else{
             $response = $response->withJson([
                 "status" => "error",
-                'message' => 'Falha na inserção da Ocorrência'
+                'message' => "Falha na inserção da Ocorrência"
             ], 502); //502 Bad Gateway
         }
         return $response;
@@ -95,10 +95,29 @@ final class AtendimentoController
 
     public function getDadosAdicionais(Request $request, Response $response, array $args): Response
     {
+        $data = $request->getParsedBody();
         $atendimentosDAO = new AtendimentosDAO();
         $dadosAdicionais = $atendimentosDAO->getDadosAdicionais();
+        $dadosAdicionaisVal = $atendimentosDAO->getDadosAdicionaisValores($data['numAtendimento']);
 
         if (!empty($dadosAdicionais)){
+            //$valores = $this->transformaRowsEmColunas($dadosAdicionais, $dadosAdicionaisVal);
+
+            // Atribui valor, se houver, ao array $dadosAdicionais que possui todos os Dados Adicionais do contrato, 
+            // mesmo que o dado não tenha sido preenchido.
+            // O array $dadosAdicionaisVal possui somente os dados adicionais que já possuem algum valor.
+            for ($i=0; $i < count($dadosAdicionais); $i++) { 
+                $valorEncontrado = '';
+                $idEncontrado = '';
+                foreach ($dadosAdicionaisVal as $rowsVal) {
+                    if ($rowsVal['Nome'] == $dadosAdicionais[$i]['Nome']) {
+                        $valorEncontrado = $rowsVal['Valor'];
+                        $idEncontrado = $rowsVal['Id'];
+                    }
+                }
+                $dadosAdicionais[$i]['Valor'] = $valorEncontrado;
+                $dadosAdicionais[$i]['Id'] = $idEncontrado;
+            }
             $response = $response->withJson($dadosAdicionais, 200); //200 OK
         }else{
             $response = $response->withJson([
@@ -109,19 +128,36 @@ final class AtendimentoController
         return $response;
     }
 
-    public function getDadosAdicionaisValores(Request $request, Response $response, array $args): Response
+    private function transformaRowsEmColunas($tableCampos, $tableValores) {
+        $result = [];
+        foreach ($tableCampos as $rowsCampo) { 
+            $valorEncontrado = '';
+            foreach ($tableValores as $rowsVal) {
+                if ($rowsVal['Nome'] == $rowsCampo['Nome']) {
+                    $valorEncontrado = $rowsVal['Valor'];
+                }
+            }
+            $result += [$rowsCampo['Nome'] => $valorEncontrado];            
+        }
+        return $result;
+    }
+
+    public function saveDadosAdicionais(Request $request, Response $response, array $args): Response
     {
         $data = $request->getParsedBody();
         $atendimentosDAO = new AtendimentosDAO();
-        $dadosAdicionaisVal = $atendimentosDAO->getDadosAdicionaisValores($data['numAtendimento']);
+        $result = $atendimentosDAO->saveDadosAdicionais($data);
 
-        if (!empty($dadosAdicionaisVal)){
-            $response = $response->withJson($dadosAdicionaisVal, 200); //200 OK
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => "Dados Adicionais Atualizados"
+            ], 200);
         }else{
             $response = $response->withJson([
                 "status" => "error",
-                "message" => "no records"
-            ], 200);
+                'message' => "Falha na inserção da Ocorrência"
+            ], 502); //502 Bad Gateway
         }
         return $response;
     }

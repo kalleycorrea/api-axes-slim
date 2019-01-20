@@ -65,9 +65,24 @@ $containerAux['logger'] = function ($c) {
 
 $mwAuthPost = function($request, $response, $next){
     $data = $request->getParsedBody();
+    $user = '';
+    $password = '';
+    //$this->logger->info('$data', $data);
 
-    if (is_null($data['usuario']) || empty($data['usuario']) || 
-        is_null($data['senha']) || empty($data['senha'])){
+    if (!isset($data['usuario']) || is_null($data['usuario']) || empty($data['usuario'])) {
+        foreach($data as $array1) {
+            if (!(is_null($array1['usuario']) || empty($array1['usuario']))) {
+                $user = $array1['usuario'] ?? '';
+                $password = $array1['senha'] ?? '';
+                break;
+            }
+        }
+    } else {
+        $user = $data['usuario'] ?? '';
+        $password = $data['senha'] ?? '';
+    }
+
+    if (is_null($user) || empty($user) || is_null($password) || empty($password)) {
         $response = $response->withJson([
             "status" => "error",
             "message" => "Usuario não autenticado"
@@ -156,7 +171,7 @@ $app->post('/updatesituacaoos', AtendimentoController::class . ':updateSituacaoO
 $app->post('/getocorrencias', AtendimentoController::class . ':getOcorrencias')->add($mwAuthPost);
 $app->post('/addocorrencia', AtendimentoController::class . ':addOcorrencia')->add($mwAuthPost);
 $app->post('/getdadosadicionais', AtendimentoController::class . ':getDadosAdicionais')->add($mwAuthPost);
-$app->post('/getdadosadicionaisvalores', AtendimentoController::class . ':getDadosAdicionaisValores')->add($mwAuthPost);
+$app->post('/savedadosadicionais', AtendimentoController::class . ':saveDadosAdicionais')->add($mwAuthPost);
 $app->patch('/usuariolocalizacao', UsuarioController::class . ':updateLocalizacao');
 // =========================================
 
