@@ -172,6 +172,7 @@ $app->post('/getocorrencias', AtendimentoController::class . ':getOcorrencias')-
 $app->post('/addocorrencia', AtendimentoController::class . ':addOcorrencia')->add($mwAuthPost);
 $app->post('/getdadosadicionais', AtendimentoController::class . ':getDadosAdicionais')->add($mwAuthPost);
 $app->post('/savedadosadicionais', AtendimentoController::class . ':saveDadosAdicionais')->add($mwAuthPost);
+$app->post('/updateenderecoinstalacao', AtendimentoController::class . ':updateEnderecoInstalacao')->add($mwAuthPost);
 $app->patch('/usuariolocalizacao', UsuarioController::class . ':updateLocalizacao');
 // =========================================
 

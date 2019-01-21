@@ -13,10 +13,11 @@ class AtendimentosDAO extends Conexao
     {
         $strSQL = "SELECT a.Numero NumAtendimento, a.Protocolo, c.Codigo CodCliente, 
         c.Nome Cliente, c.Sigla Apelido, a.Contrato, p.DescricaoComercial Plano, t.Descricao Topico, 
-        a.Prioridade, a.Assunto, a.Solucao, 
+        a.Topico CodTopico, a.Prioridade, a.Assunto, a.Solucao, 
         date_format(concat(a.Data_AB,' ',a.Hora_AB), '%d/%m/%Y %H:%i') Abertura,
         replace(isupergaus.rbx_sla(a.Numero, 'N'),'?','ú') SLA, 
         g.Nome GrupoCliente, 
+        if (e.Endereco is null, 'N', 'S') as PossuiEnderecoInstalacao, 
         if (e.Endereco is null, c.Endereco, e.Endereco) as Endereco, 
         if (e.Endereco is null, c.Numero, e.Numero) as Numero,
         if (e.Endereco is null, c.Complemento, e.Complemento) as Complemento,
@@ -174,7 +175,8 @@ class AtendimentosDAO extends Conexao
 
     public function getDadosAdicionais(): array
     {
-        $strSQL = "select a.Codigo CodigoCampo, a.Nome, a.TipoDado, a.Lista, '' Valor, '' Id 
+        $strSQL = "select a.Codigo CodigoCampo, a.Nome, a.TipoDado, a.Lista, a.Tabela, 
+        '' Valor, '' Id 
         -- a.ListaDesc, a.Tamanho, a.Obrigatorio, a.Ajuda 
         from isupergaus.CamposComplementares a 
         where a.Tabela = 'Contratos' and a.Codigo < 45 order by a.Codigo";
@@ -219,7 +221,7 @@ class AtendimentosDAO extends Conexao
                                 VALUES (:complemento, :tabela, :chave, :valor)");
                     $result = $statement->execute([
                         'complemento' => $rows['CodigoCampo'], 
-                        'tabela' => 'Contratos', 
+                        'tabela' => $rows['Tabela'], 
                         'chave' => $contrato, 
                         'valor' => $rows['Valor'] 
                         ]);
@@ -235,6 +237,27 @@ class AtendimentosDAO extends Conexao
                 }
             }
         }
+        return $result;
+    }
+
+    public function updateEnderecoInstalacao($data): bool
+    {
+        $result = FALSE;
+        $contrato = $data['contrato'] ?? '';
+
+        if (is_null($contrato) || empty($contrato)) {
+            return FALSE;
+        }
+        $statement = $this->pdoRbx
+        ->prepare("UPDATE ContratosEndereco SET 
+            MapsLat = :mapsLat, 
+            MapsLng = :mapsLng 
+            WHERE Tipo='I' and Contrato = :contrato");
+        $result = $statement->execute([
+        'mapsLat' => $data['mapsLat'],
+        'mapsLng' => $data['mapsLng'],
+        'contrato' => $contrato 
+        ]);
         return $result;
     }
 }

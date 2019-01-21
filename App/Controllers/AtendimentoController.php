@@ -50,7 +50,7 @@ final class AtendimentoController
         }else{
             $response = $response->withJson([
                 "status" => "error",
-                'message' => "Situação da OS NAO atualizada"
+                'message' => "Situação da OS NÃO atualizada"
             ], 200);
         }
         return $response;
@@ -158,6 +158,26 @@ final class AtendimentoController
                 "status" => "error",
                 'message' => "Falha na inserção da Ocorrência"
             ], 502); //502 Bad Gateway
+        }
+        return $response;
+    }
+
+    public function updateEnderecoInstalacao(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $atendimentosDAO = new AtendimentosDAO();
+        $result = $atendimentosDAO->updateEnderecoInstalacao($data);
+
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => "Endereço de Instalação atualizado"
+            ], 200);
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                'message' => "Endereço de Instalação NÃO atualizado"
+            ], 200);
         }
         return $response;
     }
