@@ -31,6 +31,7 @@ class AtendimentosDAO extends Conexao
         a.Usu_Designado, 
         a.Usuario_BX, 
         a.Grupo_Designado,
+        if (a.Usu_Designado is null, 'Técnico', a.Usu_Designado) as Equipe, 
         ct.Situacao,
         case ct.Situacao 
                 when 'A' then 'Ativo' 
@@ -240,24 +241,47 @@ class AtendimentosDAO extends Conexao
         return $result;
     }
 
-    public function updateEnderecoInstalacao($data): bool
+    public function saveEnderecoInstalacao($data): bool
     {
         $result = FALSE;
         $contrato = $data['contrato'] ?? '';
+        $operacao = $data['operacao'];
 
         if (is_null($contrato) || empty($contrato)) {
             return FALSE;
         }
-        $statement = $this->pdoRbx
-        ->prepare("UPDATE ContratosEndereco SET 
-            MapsLat = :mapsLat, 
-            MapsLng = :mapsLng 
-            WHERE Tipo='I' and Contrato = :contrato");
-        $result = $statement->execute([
-        'mapsLat' => $data['mapsLat'],
-        'mapsLng' => $data['mapsLng'],
-        'contrato' => $contrato 
-        ]);
+        if ($operacao == 'insert') {
+            $statement = $this->pdoRbx
+            ->prepare("INSERT INTO ContratosEndereco (Cliente,Contrato,Tipo,Cobranca,Pais,Endereco,Numero,Bairro,Complemento,Cidade,UF,CEP,MapsLat,MapsLng) 
+                        VALUES (:cliente,:contrato,:tipo,:cobranca,:pais,:endereco,:numero,:bairro,:complemento,:cidade,:uf,:cep,:mapsLat,:mapsLng)");
+            $result = $statement->execute([
+                'cliente' => $data['cliente'],
+                'contrato' => $data['contrato'],
+                'tipo' => $data['tipo'],
+                'cobranca' => $data['cobranca'],
+                'pais' => $data['pais'],
+                'endereco' => $data['endereco'],
+                'numero' => $data['numero'],
+                'bairro' => $data['bairro'],
+                'complemento' => $data['complemento'],
+                'cidade' => $data['cidade'],
+                'uf' => $data['uf'],
+                'cep' => $data['cep'],
+                'mapsLat' => $data['mapsLat'],
+                'mapsLng' => $data['mapsLng']
+                ]);
+        } else {
+            $statement = $this->pdoRbx
+            ->prepare("UPDATE ContratosEndereco SET 
+                MapsLat = :mapsLat, 
+                MapsLng = :mapsLng 
+                WHERE Tipo='I' and Contrato = :contrato");
+            $result = $statement->execute([
+            'mapsLat' => $data['mapsLat'],
+            'mapsLng' => $data['mapsLng'],
+            'contrato' => $contrato 
+            ]);
+        }
         return $result;
     }
 }

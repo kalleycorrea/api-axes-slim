@@ -162,11 +162,11 @@ final class AtendimentoController
         return $response;
     }
 
-    public function updateEnderecoInstalacao(Request $request, Response $response, array $args): Response
+    public function saveEnderecoInstalacao(Request $request, Response $response, array $args): Response
     {
         $data = $request->getParsedBody();
         $atendimentosDAO = new AtendimentosDAO();
-        $result = $atendimentosDAO->updateEnderecoInstalacao($data);
+        $result = $atendimentosDAO->saveEnderecoInstalacao($data);
 
         if ($result == TRUE){
             $response = $response->withJson([
