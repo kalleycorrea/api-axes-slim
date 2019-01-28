@@ -181,4 +181,41 @@ final class AtendimentoController
         }
         return $response;
     }
+
+    public function getAnexos(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $atendimentosDAO = new AtendimentosDAO();
+        $anexos = $atendimentosDAO->getAnexos($data['numAtendimento']);
+
+        if (!empty($anexos)){
+            $response = $response->withJson($anexos, 200); //200 OK
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                "message" => "no records"
+            ], 200);
+        }
+        return $response;
+    }
+
+    public function addAnexos(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $atendimentosDAO = new AtendimentosDAO();
+        $result = $atendimentosDAO->addAnexos($data);
+
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => "Anexo Inserido"
+            ], 200);
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                'message' => "Falha na inserção do Anexo"
+            ], 502); //502 Bad Gateway
+        }
+        return $response;
+    }
 }

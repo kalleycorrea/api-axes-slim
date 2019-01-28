@@ -284,4 +284,39 @@ class AtendimentosDAO extends Conexao
         }
         return $result;
     }
+
+    public function getAnexos($pNumAtendimento): array
+    {
+        $strSQL = "select concat('https://rbx.axes.com.br/routerbox/file/docarquivos/', Arquivo) as Arquivo, 
+            Descricao from Arquivo where Tipo='A' and Codigo=".$pNumAtendimento." order by Id desc";
+
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $anexos = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $anexos;
+    }
+
+    public function addAnexos($data): bool
+    {
+        $result = FALSE;
+        $statement = $this->pdoRbx
+        ->prepare("INSERT INTO Arquivo (Codigo, Usuario, Arquivo, NomeArquivo, Descricao, Tipo, Visivel) 
+                    VALUES (:codigo, :usuario, :nomeArquivo, :nomeArquivo, :descricao, 'A', 'N')");
+        $result = $statement->execute([
+            'codigo' => $data['numAtendimento'],
+            'usuario' => $data['usuario'], 
+            'arquivo' => $data['nomeArquivo'],
+            'nomeArquivo' => $data['nomeArquivo'], 
+            'descricao' => $data['descricao']
+            ]);
+        if ($result == TRUE) {
+            // Salva o arquivo no servidor do Routerbox
+            $base64Image = $data['base64Image'];
+            list($type, $base64Image) = explode(';', $base64Image);
+            list(, $base64Image)      = explode(',', $base64Image);
+            $base64Image = base64_decode($base64Image);
+            file_put_contents("https://rbx.axes.com.br/routerbox/file/docarquivos/".$data['nomeArquivo'], $base64Image);
+        }
+        return $result;
+    }
 }
