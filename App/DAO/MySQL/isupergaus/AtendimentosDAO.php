@@ -2,6 +2,15 @@
 
 namespace App\DAO\MySQL\isupergaus;
 
+set_include_path(get_include_path() . '\phpseclib');
+ // include('Net/SFTP.php');
+
+require 'Net/SSH1.php';
+require 'Net/SSH2.php';
+require 'Net/SCP.php';
+require 'Net/SFTP.php';
+require 'Net/SFTP/Stream.php';
+
 class AtendimentosDAO extends Conexao
 {
     public function __construct()
@@ -287,8 +296,8 @@ class AtendimentosDAO extends Conexao
 
     public function getAnexos($pNumAtendimento): array
     {
-        $strSQL = "select concat('https://rbx.axes.com.br/routerbox/file/docarquivos/', Arquivo) as Arquivo, 
-            Descricao from Arquivo where Tipo='A' and Codigo=".$pNumAtendimento." order by Id desc";
+        $strSQL = "select concat('https://rbx.axes.com.br/routerbox/file/docarquivos/', Arquivo) as imagem, 
+            descricao from Arquivo where Tipo='A' and Codigo=".$pNumAtendimento." order by Id desc";
 
         $statement = $this->pdoRbx->prepare($strSQL);
         $statement->execute();
@@ -311,11 +320,25 @@ class AtendimentosDAO extends Conexao
             ]);
         if ($result == TRUE) {
             // Salva o arquivo no servidor do Routerbox
-            $base64Image = $data['base64Image'];
-            list($type, $base64Image) = explode(';', $base64Image);
-            list(, $base64Image)      = explode(',', $base64Image);
-            $base64Image = base64_decode($base64Image);
-            file_put_contents("https://rbx.axes.com.br/routerbox/file/docarquivos/".$data['nomeArquivo'], $base64Image);
+            // $base64Image = $data['base64Image'];
+            // list($type, $base64Image) = explode(';', $base64Image);
+            // list(, $base64Image)      = explode(',', $base64Image);
+            // $binaryImage = base64_decode($base64Image);
+            // file_put_contents("/var/www/routerbox/file/docarquivos/".$data['nomeArquivo'], $binaryImage);
+
+            // set_include_path(get_include_path() . '\phpseclib');
+            // include('Net/SFTP.php');
+            
+            $sftp = new Net_SFTP('179.191.232.6');
+            if (!$sftp->login('root', 'rb2016!')) {
+                return FALSE;
+            }
+            // Decodifica dados codificados com MIME base64 para binário
+            $binaryImage = base64_decode($data['base64Image']);
+            
+            $sftp->chdir('/var/www/routerbox/file/docarquivos/');
+            //$sftp->put('filename.png', $binaryImage, "NET_SFTP_LOCAL_FILE");
+            $sftp->put('filename.png', $binaryImage);
         }
         return $result;
     }
