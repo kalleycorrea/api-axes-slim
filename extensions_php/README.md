@@ -13,6 +13,12 @@ include_path=C:\xampp\php\PEAR
 local save phpseclib
 C:\xampp\php\pear\phpseclib
 
+# Outra forma de usar o phpseclib (importando através composer)
+
+If you are using Laravel 5 or similar, you can use phpseclib much simpler like this:
+Run composer require phpseclib/phpseclib ~2.0
+use phpseclib\Net\SSH2;
+
 
 # SSH2 PECL Extension
 Solução Nativa para SSH no PHP
