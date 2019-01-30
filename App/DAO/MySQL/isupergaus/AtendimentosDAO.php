@@ -289,7 +289,8 @@ class AtendimentosDAO extends Conexao
 
     public function getAnexos($pNumAtendimento): array
     {
-        $strSQL = "select concat('https://rbx.axes.com.br/routerbox/file/docarquivos/', Arquivo) as imagem, 
+        $urlDocRbx = getenv('URL_IMG_DOC_RBX');
+        $strSQL = "select concat('".$urlDocRbx."', Arquivo) as imagem, 
             descricao from Arquivo where Tipo='A' and Codigo=".$pNumAtendimento." order by Id desc";
 
         $statement = $this->pdoRbx->prepare($strSQL);
@@ -303,7 +304,7 @@ class AtendimentosDAO extends Conexao
         $result = FALSE;
         $statement = $this->pdoRbx
         ->prepare("INSERT INTO Arquivo (Codigo, Usuario, Arquivo, NomeArquivo, Descricao, Tipo, Visivel) 
-                    VALUES (:codigo, :usuario, :nomeArquivo, :nomeArquivo, :descricao, 'A', 'N')");
+                    VALUES (:codigo, :usuario, :arquivo, :nomeArquivo, :descricao, 'A', 'N')");
         $result = $statement->execute([
             'codigo' => $data['numAtendimento'],
             'usuario' => $data['usuario'], 
@@ -313,20 +314,18 @@ class AtendimentosDAO extends Conexao
             ]);
         if ($result == TRUE) {
             // Salva o arquivo no servidor do Routerbox
-            
-            // $base64Image = $data['base64Image'];
-            // list($type, $base64Image) = explode(';', $base64Image);
-            // list(, $base64Image)      = explode(',', $base64Image);
-            // $binaryImage = base64_decode($base64Image);
-            // file_put_contents("/var/www/routerbox/file/docarquivos/".$data['nomeArquivo'], $binaryImage);
-            
-            $sftp = new SFTP('179.191.232.6');
-            if (!$sftp->login('root', 'rb2016!')) {
+            $hostRbx = getenv('MYSQL_HOST_RBX');
+            $userSSHRbx = getenv('SSH_USER_RBX');
+            $passSSHRbx = getenv('SSH_PASSWORD_RBX');
+            $dirDocRbx = getenv('DIR_IMG_DOC_RBX');
+
+            $sftp = new SFTP($hostRbx);
+            if (!$sftp->login($userSSHRbx, $passSSHRbx)) {
                 return FALSE;
             }
             // Decodifica dados codificados com MIME base64 para binário
             $binaryImage = base64_decode($data['base64Image']);
-            $sftp->chdir('/var/www/routerbox/file/docarquivos/');
+            $sftp->chdir($dirDocRbx);
             $sftp->put($data['nomeArquivo'], $binaryImage);
 
             // Adiciona Ocorrência
@@ -340,4 +339,74 @@ class AtendimentosDAO extends Conexao
         }
         return $result;
     }
+
+    private function getAssinatura($pNumAtendimento, $nomeArquivo): array
+    {
+        $strSQL = "select Id from Arquivo where Tipo='A' and NomeArquivo='".$nomeArquivo."' and Codigo=".$pNumAtendimento;
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $assinatura = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $assinatura;
+    }
+
+    public function addAssinatura($data): bool
+    {
+        $result = FALSE;
+        $nomeArquivo = $data['numAtendimento'].'-Assinatura.jpg';
+        $assinatura = $this->getAssinatura($data['numAtendimento'], $nomeArquivo);
+
+        if (empty($assinatura)) {
+            // Insert Assinatura
+            $statement = $this->pdoRbx
+            ->prepare("INSERT INTO Arquivo (Codigo, Usuario, Arquivo, NomeArquivo, Descricao, Tipo, Visivel) 
+                        VALUES (:codigo, :usuario, :arquivo, :nomeArquivo, 'Assinatura do Cliente', 'A', 'N')");
+            $result = $statement->execute([
+                'codigo' => $data['numAtendimento'],
+                'usuario' => $data['usuario'], 
+                'arquivo' => $nomeArquivo,
+                'nomeArquivo' => $nomeArquivo
+                ]);
+        }else {
+            // Update Assinatura
+            $result = TRUE;
+        }        
+
+        if ($result == TRUE) {
+            // Salva o arquivo no servidor do Routerbox
+            $hostRbx = getenv('MYSQL_HOST_RBX');
+            $userSSHRbx = getenv('SSH_USER_RBX');
+            $passSSHRbx = getenv('SSH_PASSWORD_RBX');
+            $dirDocRbx = getenv('DIR_IMG_DOC_RBX');
+
+            $sftp = new SFTP($hostRbx);
+            if (!$sftp->login($userSSHRbx, $passSSHRbx)) {
+                return FALSE;
+            }
+            // Decodifica dados codificados com MIME base64 para binário
+            $binaryImage = base64_decode($data['base64Image']);
+            $sftp->chdir($dirDocRbx);
+            $sftp->put($nomeArquivo, $binaryImage);
+
+            // Adiciona Ocorrência
+            if (empty($assinatura)) {
+                $statement2 = $this->pdoRbx
+                ->prepare("INSERT INTO AtendUltAlteracao (Atendimento, Usuario, Descricao, Data, Modo) 
+                            VALUES (:atendimento, :usuario, 'Inclusão de Assinatura', now(), 'M')");
+                $result2 = $statement2->execute([
+                    'atendimento' => $data['numAtendimento'],
+                    'usuario' => $data['usuario']
+                    ]);
+            } else {
+                $statement2 = $this->pdoRbx
+                ->prepare("INSERT INTO AtendUltAlteracao (Atendimento, Usuario, Descricao, Data, Modo) 
+                            VALUES (:atendimento, :usuario, 'Alteração de Assinatura', now(), 'M')");
+                $result2 = $statement2->execute([
+                    'atendimento' => $data['numAtendimento'],
+                    'usuario' => $data['usuario']
+                    ]);
+            }
+        }
+        return $result;
+    }
+
 }

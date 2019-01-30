@@ -13,3 +13,10 @@ putenv('MYSQL_DBNAME_AXES=');
 putenv('MYSQL_USER_AXES=');
 putenv('MYSQL_PASSWORD_AXES=');
 putenv('MYSQL_PORT_AXES=');
+
+putenv('SSH_USER_RBX=');
+putenv('SSH_PASSWORD_RBX=');
+
+putenv('URL_IMG_USER_RBX=');
+putenv('URL_IMG_DOC_RBX=');
+putenv('DIR_IMG_DOC_RBX=');

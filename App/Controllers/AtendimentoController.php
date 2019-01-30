@@ -218,4 +218,24 @@ final class AtendimentoController
         }
         return $response;
     }
+
+    public function addAssinatura(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $atendimentosDAO = new AtendimentosDAO();
+        $result = $atendimentosDAO->addAssinatura($data);
+
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => "Assinatura Inserida"
+            ], 200);
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                'message' => "Falha na inserção da Assinatura"
+            ], 502); //502 Bad Gateway
+        }
+        return $response;
+    }
 }

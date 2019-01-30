@@ -14,6 +14,7 @@ class UsuariosDAO extends Conexao
 
     public function getUsuario($pUsuario, $pSenha): array
     {
+        $urlImgUserRbx = getenv('URL_IMG_USER_RBX');
         /*
         $usuario = $this->pdoRbx
             ->query('SELECT
@@ -23,16 +24,16 @@ class UsuariosDAO extends Conexao
                     Foto,
                     idgrupo,
                     perfil 
-                FROM usuarios WHERE usuario=\'kalley\';')
+                FROM usuarios WHERE usuario=')
             ->fetchAll(\PDO::FETCH_ASSOC);
         */
         $statement = $this->pdoRbx
             ->prepare("SELECT usuario, Terminal senha, Nome, idgrupo, 
             if(master='S','G',if(perfil=19,'A','T')) as tipo, 
-            MobileDevice, MobileTrackingTrace, MobileDeviceId, Latitude, Longitude, MobileLastDataReceived, MobileLastLogin, 
-            concat('https://rbx.axes.com.br/routerbox/file/img/',if(ifnull(Foto,'')='','contact_default.png',Foto)) as Foto 
+            MobileDeviceId, Latitude, Longitude, MobileLastDataReceived 
             FROM usuarios 
             WHERE usuario = :usuario AND Terminal = :senha AND situacao = 'A' ;");
+        // concat('".$urlImgUserRbx."',if(ifnull(Foto,'')='','contact_default.png',Foto)) as Foto 
 
         $statement->bindParam(':usuario', $pUsuario, \PDO::PARAM_STR);
         $statement->bindParam(':senha', $pSenha, \PDO::PARAM_STR);
