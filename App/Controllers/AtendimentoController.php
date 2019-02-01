@@ -238,4 +238,24 @@ final class AtendimentoController
         }
         return $response;
     }
+
+    public function addRating(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $atendimentosDAO = new AtendimentosDAO();
+        $result = $atendimentosDAO->addRating($data);
+
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => "Avaliação Inserida"
+            ], 200);
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                'message' => "Falha na inserção da Avaliação"
+            ], 502); //502 Bad Gateway
+        }
+        return $response;
+    }
 }

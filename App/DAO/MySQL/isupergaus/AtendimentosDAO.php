@@ -409,4 +409,111 @@ class AtendimentosDAO extends Conexao
         return $result;
     }
 
+    public function addRating($data): bool
+    {
+        $result = FALSE;
+        $atendimento = $data['numAtendimento'];
+
+        // Rating Atendimento
+        $strSQL = "SELECT id FROM CamposComplementaresValores WHERE Complemento = 51 and Chave = ".$atendimento;
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $query = $statement->fetchAll(\PDO::FETCH_ASSOC);
+
+        if (!isset($query[0]['id']) || empty($query[0]['id'])) {
+            $statement = $this->pdoRbx
+            ->prepare("INSERT INTO CamposComplementaresValores (Complemento, Tabela, Chave, Valor) 
+                        VALUES (51, 'Atendimentos', :chave, :valor)");
+            $result = $statement->execute([
+                'chave' => $atendimento, 
+                'valor' => $data['ratingAtendimento']
+                ]);
+        } else {
+            $statement = $this->pdoRbx
+            ->prepare('UPDATE CamposComplementaresValores SET Valor = :valor WHERE id = :id');
+            $result = $statement->execute([
+            'valor' => $data['ratingAtendimento'],
+            'id' => $query[0]['id'] 
+            ]);
+        }
+        // Comentário Rating Atendimento
+        $strSQL = "SELECT id FROM CamposComplementaresValores WHERE Complemento = 52 and Chave = ".$atendimento;
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $query = $statement->fetchAll(\PDO::FETCH_ASSOC);
+
+        if (!isset($query[0]['id']) || empty($query[0]['id'])) {
+            $statement = $this->pdoRbx
+            ->prepare("INSERT INTO CamposComplementaresValores (Complemento, Tabela, Chave, Valor) 
+                        VALUES (52, 'Atendimentos', :chave, :valor)");
+            $result = $statement->execute([
+                'chave' => $atendimento, 
+                'valor' => $data['commentRatingAtendimento']
+                ]);
+        } else {
+            $statement = $this->pdoRbx
+            ->prepare('UPDATE CamposComplementaresValores SET Valor = :valor WHERE id = :id');
+            $result = $statement->execute([
+            'valor' => $data['commentRatingAtendimento'],
+            'id' => $query[0]['id'] 
+            ]);
+        }
+        // Rating Produto
+        $strSQL = "SELECT id FROM CamposComplementaresValores WHERE Complemento = 53 and Chave = ".$atendimento;
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $query = $statement->fetchAll(\PDO::FETCH_ASSOC);
+
+        if (!isset($query[0]['id']) || empty($query[0]['id'])) {
+            $statement = $this->pdoRbx
+            ->prepare("INSERT INTO CamposComplementaresValores (Complemento, Tabela, Chave, Valor) 
+                        VALUES (53, 'Atendimentos', :chave, :valor)");
+            $result = $statement->execute([
+                'chave' => $atendimento, 
+                'valor' => $data['ratingProduto']
+                ]);
+        } else {
+            $statement = $this->pdoRbx
+            ->prepare('UPDATE CamposComplementaresValores SET Valor = :valor WHERE id = :id');
+            $result = $statement->execute([
+            'valor' => $data['ratingProduto'],
+            'id' => $query[0]['id'] 
+            ]);
+        }
+        // Comentário Rating Produto
+        $strSQL = "SELECT id FROM CamposComplementaresValores WHERE Complemento = 54 and Chave = ".$atendimento;
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $query = $statement->fetchAll(\PDO::FETCH_ASSOC);
+
+        if (!isset($query[0]['id']) || empty($query[0]['id'])) {
+            $statement = $this->pdoRbx
+            ->prepare("INSERT INTO CamposComplementaresValores (Complemento, Tabela, Chave, Valor) 
+                        VALUES (54, 'Atendimentos', :chave, :valor)");
+            $result = $statement->execute([
+                'chave' => $atendimento, 
+                'valor' => $data['commentRatingProduto']
+                ]);
+        } else {
+            $statement = $this->pdoRbx
+            ->prepare('UPDATE CamposComplementaresValores SET Valor = :valor WHERE id = :id');
+            $result = $statement->execute([
+            'valor' => $data['commentRatingProduto'],
+            'id' => $query[0]['id'] 
+            ]);
+        }
+
+        // Adiciona Ocorrência
+        if ($result == TRUE) {
+            $statement2 = $this->pdoRbx
+            ->prepare("INSERT INTO AtendUltAlteracao (Atendimento, Usuario, Descricao, Data, Modo) 
+                        VALUES (:atendimento, :usuario, 'Avaliação do Cliente Registrada', now(), 'M')");
+            $result2 = $statement2->execute([
+                'atendimento' => $data['numAtendimento'],
+                'usuario' => $data['usuario']
+                ]);
+        }
+        return $result;
+    }
+
 }
