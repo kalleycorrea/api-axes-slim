@@ -292,4 +292,24 @@ final class AtendimentoController
         }
         return $response;
     }
+
+    public function saveCheckList(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $atendimentosDAO = new AtendimentosDAO();
+        $result = $atendimentosDAO->saveCheckList($data);
+
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => "CheckList Adicionado"
+            ], 200);
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                'message' => "Falha na inserção do CheckList"
+            ], 502); //502 Bad Gateway
+        }
+        return $response;
+    }
 }

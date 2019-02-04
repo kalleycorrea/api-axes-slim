@@ -539,4 +539,33 @@ class AtendimentosDAO extends Conexao
         return $causas;
     }
 
+    public function saveCheckList($data): bool
+    {
+        $result = FALSE;
+        $statement = $this->pdoRbx
+        ->prepare('UPDATE Atendimentos SET Checklist = :checklist WHERE Numero = :numero');
+        $result = $statement->execute([
+            'checklist' => $data['strChecklist'],
+            'numero' => $data['numAtendimento'] 
+        ]);
+
+        // Adiciona Ocorrência
+        if ($result == TRUE) {
+            $descricao = '';
+            if (empty($data['descChecklist'])) {
+                $descricao = 'Todos os itens do checklist foram desmarcados';
+            } else {
+                $descricao = 'Novos itens de checklist marcados: '.$data['descChecklist'];
+            }
+            $statement2 = $this->pdoRbx
+            ->prepare("INSERT INTO AtendUltAlteracao (Atendimento, Usuario, Descricao, Data, Modo) 
+                        VALUES (:atendimento, :usuario, :descricao, now(), 'A')");
+            $result2 = $statement2->execute([
+                'atendimento' => $data['numAtendimento'],
+                'usuario' => $data['usuario'],
+                'descricao' => $descricao
+                ]);
+        }
+        return $result;
+    }
 }
