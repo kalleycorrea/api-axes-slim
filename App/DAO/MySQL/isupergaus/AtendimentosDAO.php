@@ -568,4 +568,83 @@ class AtendimentosDAO extends Conexao
         }
         return $result;
     }
+
+    public function saveDesignacao($data): bool
+    {
+        $result = FALSE;
+        $strSQL = '';
+        if (empty($data['usuarioDesignado'])) {
+            $strSQL = "UPDATE Atendimentos SET Grupo_Designado = ".$data['grupoDesignado']." WHERE Numero = ".$data['numAtendimento'];
+        } else {
+            $strSQL = "UPDATE Atendimentos SET Usu_Designado = ".$data['usuarioDesignado']." WHERE Numero = ".$data['numAtendimento'];
+        }
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $result = $statement->execute();
+        // $result = $statement->execute([
+        //     'numero' => $data['numAtendimento'],
+        //     'designado' => (empty($data['usuarioDesignado']) ? $data['grupoDesignado'] : $data['usuarioDesignado']) 
+        // ]);
+
+        // Adiciona Ocorrência
+        if ($result == TRUE) {
+            $descricao = '';
+            if (empty($data['usuarioDesignado'])) {
+                $descricao = "Atendimento designado de <b>".$data['usuario']."</b> para <b>".$data['grupoDesignado']."</b><BR>";
+            } else {
+                $descricao = "Atendimento designado de <b>".$data['usuario']."</b> para <b>".$data['usuarioDesignado']."</b><BR>";
+            }
+            $statement2 = $this->pdoRbx
+            ->prepare("INSERT INTO AtendUltAlteracao (Atendimento, Usuario, Descricao, Data, Modo) 
+                        VALUES (:atendimento, :usuario, :descricao, now(), 'A')");
+            $result2 = $statement2->execute([
+                'atendimento' => $data['numAtendimento'],
+                'usuario' => $data['usuario'],
+                'descricao' => $descricao
+                ]);
+        }
+        return $result;
+    }
+
+    public function saveEncerramento($data): bool
+    {
+        $result = FALSE;
+        $statement = $this->pdoRbx
+        ->prepare("UPDATE Atendimentos 
+                    SET Causa = :causa, 
+                        Solucao = :solucao, 
+                        Usuario_BX = :usuario, 
+                        Data_BX = now(), 
+                        Situacao = 'F' 
+                    WHERE Numero = :numero");
+        $result = $statement->execute([
+            'causa' =>  $data['causa'],
+            'solucao' =>  $data['solucao'],
+            'usuario' => $data['usuario'],
+            'numero' => $data['numAtendimento']
+        ]);
+
+        // Adiciona Ocorrência
+        if ($result == TRUE) {
+            $descricao = 'Assunto/Solução alterado(s)<BR>';
+            $statement2 = $this->pdoRbx
+            ->prepare("INSERT INTO AtendUltAlteracao (Atendimento, Usuario, Descricao, Data, Modo) 
+                        VALUES (:atendimento, :usuario, :descricao, now(), 'A')");
+            $result2 = $statement2->execute([
+                'atendimento' => $data['numAtendimento'],
+                'usuario' => $data['usuario'],
+                'descricao' => $descricao
+                ]);
+            
+            $descricao = 'Atendimento encerrado<BR>';
+            $statement2 = $this->pdoRbx
+            ->prepare("INSERT INTO AtendUltAlteracao (Atendimento, Usuario, Descricao, Data, Modo) 
+                        VALUES (:atendimento, :usuario, :descricao, now(), 'A')");
+            $result2 = $statement2->execute([
+                'atendimento' => $data['numAtendimento'],
+                'usuario' => $data['usuario'],
+                'descricao' => $descricao
+                ]);
+        }
+        return $result;
+    }
 }

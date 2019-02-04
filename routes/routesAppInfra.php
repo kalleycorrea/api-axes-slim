@@ -182,6 +182,8 @@ $app->post('/getgrupousuarios', UsuarioController::class . ':getGrupoUsuarios')-
 $app->post('/getusuarios', UsuarioController::class . ':getUsuarios')->add($mwAuthPost);
 $app->post('/getatendimentocausas', AtendimentoController::class . ':getAtendimentoCausas')->add($mwAuthPost);
 $app->post('/savechecklist', AtendimentoController::class . ':saveCheckList')->add($mwAuthPost);
+$app->post('/savedesignacao', AtendimentoController::class . ':saveDesignacao')->add($mwAuthPost);
+$app->post('/saveencerramento', AtendimentoController::class . ':saveEncerramento')->add($mwAuthPost);
 
 $app->patch('/usuariolocalizacao', UsuarioController::class . ':updateLocalizacao');
 // =========================================

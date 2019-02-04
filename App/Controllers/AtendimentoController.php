@@ -312,4 +312,44 @@ final class AtendimentoController
         }
         return $response;
     }
+
+    public function saveDesignacao(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $atendimentosDAO = new AtendimentosDAO();
+        $result = $atendimentosDAO->saveDesignacao($data);
+
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => "Atendimento Designado"
+            ], 200);
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                'message' => "Falha ao Designar Atendimento"
+            ], 502); //502 Bad Gateway
+        }
+        return $response;
+    }
+
+    public function saveEncerramento(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $atendimentosDAO = new AtendimentosDAO();
+        $result = $atendimentosDAO->saveEncerramento($data);
+
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => "Atendimento Encerrado"
+            ], 200);
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                'message' => "Falha ao Encerrar Atendimento"
+            ], 502); //502 Bad Gateway
+        }
+        return $response;
+    }
 }
