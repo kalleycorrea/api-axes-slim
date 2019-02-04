@@ -14,7 +14,7 @@ class AtendimentosDAO extends Conexao
     public function getAtendimentos($pUsuario, $pTipo, $pGrupo): array
     {
         $strSQL = "SELECT a.Numero NumAtendimento, a.Protocolo, c.Codigo CodCliente, 
-        c.Nome Cliente, c.Sigla Apelido, a.Contrato, p.DescricaoComercial Plano, t.Descricao Topico, 
+        c.Nome Cliente, c.Sigla Apelido, a.Tipo, a.Contrato, p.DescricaoComercial Plano, t.Descricao Topico, 
         a.Topico CodTopico, a.Prioridade, a.Assunto, a.Solucao, 
         date_format(concat(a.Data_AB,' ',a.Hora_AB), '%d/%m/%Y %H:%i') Abertura,
         replace(isupergaus.rbx_sla(a.Numero, 'N'),'?','ú') SLA, 
@@ -518,13 +518,25 @@ class AtendimentosDAO extends Conexao
 
     public function getCheckList($pNumAtendimento): array
     {
-        $strSQL = "select c.Id, c.Descricao, a.Checklist Marcados, '' Checked 
+        $strSQL = "select c.Id, c.Descricao, a.Checklist Marcados, 'false' Checked 
         from AtendimentoChecklist c left join Atendimentos a on c.Atendimento = a.Numero 
-        where Atendimento = ".$pNumAtendimento." order by c.Id";
+        where c.Atendimento = ".$pNumAtendimento." order by c.Id";
 
         $statement = $this->pdoRbx->prepare($strSQL);
         $statement->execute();
         $checklist = $statement->fetchAll(\PDO::FETCH_ASSOC);
         return $checklist;
     }
+
+    public function getAtendimentoCausas($pTipo): array
+    {
+        $strSQL = "select Codigo, Descricao, Grupo from isupergaus.AtendCausas 
+        where Situacao='A' and Tipo='".$pTipo."'";
+
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $causas = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $causas;
+    }
+
 }

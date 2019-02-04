@@ -275,4 +275,21 @@ final class AtendimentoController
         }
         return $response;
     }
+
+    public function getAtendimentoCausas(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $atendimentosDAO = new AtendimentosDAO();
+        $causas = $atendimentosDAO->getAtendimentoCausas($data['tipoAtendimento']);
+
+        if (!empty($causas)){
+            $response = $response->withJson($causas, 200); //200 OK
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                "message" => "no records"
+            ], 200);
+        }
+        return $response;
+    }
 }
