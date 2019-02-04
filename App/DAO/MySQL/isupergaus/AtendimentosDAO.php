@@ -516,4 +516,15 @@ class AtendimentosDAO extends Conexao
         return $result;
     }
 
+    public function getCheckList($pNumAtendimento): array
+    {
+        $strSQL = "select c.Id, c.Descricao, a.Checklist Marcados, '' Checked 
+        from AtendimentoChecklist c left join Atendimentos a on c.Atendimento = a.Numero 
+        where Atendimento = ".$pNumAtendimento." order by c.Id";
+
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $checklist = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $checklist;
+    }
 }

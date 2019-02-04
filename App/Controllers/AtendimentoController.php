@@ -258,4 +258,21 @@ final class AtendimentoController
         }
         return $response;
     }
+
+    public function getCheckList(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $atendimentosDAO = new AtendimentosDAO();
+        $checklist = $atendimentosDAO->getCheckList($data['numAtendimento']);
+
+        if (!empty($checklist)){
+            $response = $response->withJson($checklist, 200); //200 OK
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                "message" => "no records"
+            ], 200);
+        }
+        return $response;
+    }
 }

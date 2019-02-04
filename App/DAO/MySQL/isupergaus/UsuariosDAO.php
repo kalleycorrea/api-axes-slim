@@ -153,4 +153,29 @@ class UsuariosDAO extends Conexao
     private function setPassword(){
 
     }
+
+    public function getGrupoUsuarios(): array
+    {
+        $strSQL = "select id, Grupo as Nome from isupergaus.UsuariosGrupoSetor";
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $grupoUsuarios = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $grupoUsuarios;
+    }
+
+    public function getUsuarios($pGrupo): array
+    {
+        $strSQL = '';
+        if (empty($pGrupo)) {
+            $strSQL = "select usuario as Nome, perfil, idgrupo from isupergaus.usuarios 
+            where situacao = 'A' order by usuario";
+        } else {
+            $strSQL = "select usuario as Nome, perfil, idgrupo from isupergaus.usuarios 
+            where situacao = 'A' and idgrupo = ".$pGrupo." order by usuario";
+        }
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $usuarios = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $usuarios;
+    }
 }

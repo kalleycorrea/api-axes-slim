@@ -177,6 +177,10 @@ $app->post('/getanexos', AtendimentoController::class . ':getAnexos')->add($mwAu
 $app->post('/addanexos', AtendimentoController::class . ':addAnexos')->add($mwAuthPost);
 $app->post('/addassinatura', AtendimentoController::class . ':addAssinatura')->add($mwAuthPost);
 $app->post('/addrating', AtendimentoController::class . ':addRating')->add($mwAuthPost);
+$app->post('/getchecklist', AtendimentoController::class . ':getCheckList')->add($mwAuthPost);
+$app->post('/getgrupousuarios', UsuarioController::class . ':getGrupoUsuarios')->add($mwAuthPost);
+$app->post('/getusuarios', UsuarioController::class . ':getUsuarios')->add($mwAuthPost);
+
 $app->patch('/usuariolocalizacao', UsuarioController::class . ':updateLocalizacao');
 // =========================================
 

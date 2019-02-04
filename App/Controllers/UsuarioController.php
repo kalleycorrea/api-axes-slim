@@ -62,4 +62,38 @@ final class UsuarioController
         
         return $response;
     }
+
+    public function getGrupoUsuarios(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $usuarioDAO = new UsuariosDAO();
+        $grupoUsuarios = $usuarioDAO->getGrupoUsuarios();
+
+        if (!empty($grupoUsuarios)){
+            $response = $response->withJson($grupoUsuarios, 200); //200 OK
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                "message" => "no records"
+            ], 200);
+        }
+        return $response;
+    }
+
+    public function getUsuarios(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $usuarioDAO = new UsuariosDAO();
+        $usuarios = $usuarioDAO->getUsuarios($data['grupo']);
+
+        if (!empty($usuarios)){
+            $response = $response->withJson($usuarios, 200); //200 OK
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                "message" => "no records"
+            ], 200);
+        }
+        return $response;
+    }
 }
