@@ -14,8 +14,8 @@ class AtendimentosDAO extends Conexao
     public function getAtendimentos($pUsuario, $pTipo, $pGrupo): array
     {
         $strSQL = "SELECT a.Numero NumAtendimento, a.Protocolo, c.Codigo CodCliente, 
-        c.Nome Cliente, c.Sigla Apelido, a.Tipo, a.Contrato, p.DescricaoComercial Plano, t.Descricao Topico, 
-        a.Topico CodTopico, a.Prioridade, a.Assunto, a.Solucao, 
+        c.Nome Cliente, c.Sigla Apelido, a.Tipo, a.Contrato, p.DescricaoComercial Plano, t.Descricao DescTopico, 
+        a.Topico, a.Prioridade, a.Assunto, a.Solucao, 
         date_format(concat(a.Data_AB,' ',a.Hora_AB), '%d/%m/%Y %H:%i') Abertura,
         replace(isupergaus.rbx_sla(a.Numero, 'N'),'?','ú') SLA, 
         g.Nome GrupoCliente, 
@@ -574,19 +574,17 @@ class AtendimentosDAO extends Conexao
         $result = FALSE;
         $strSQL = '';
         if (empty($data['usuarioDesignado'])) {
-            $strSQL = "UPDATE Atendimentos SET Grupo_Designado = ".$data['grupoDesignado']." WHERE Numero = ".$data['numAtendimento'];
+            $strSQL = "UPDATE Atendimentos SET Grupo_Designado = ".$data['grupoDesignado'].", Usu_Designado='' 
+            WHERE Numero = ".$data['numAtendimento'];
         } else {
-            $strSQL = "UPDATE Atendimentos SET Usu_Designado = ".$data['usuarioDesignado']." WHERE Numero = ".$data['numAtendimento'];
+            $strSQL = "UPDATE Atendimentos SET Usu_Designado = '".$data['usuarioDesignado']."', Grupo_Designado=0 
+            WHERE Numero = ".$data['numAtendimento'];
         }
         $statement = $this->pdoRbx->prepare($strSQL);
         $result = $statement->execute();
-        // $result = $statement->execute([
-        //     'numero' => $data['numAtendimento'],
-        //     'designado' => (empty($data['usuarioDesignado']) ? $data['grupoDesignado'] : $data['usuarioDesignado']) 
-        // ]);
 
-        // Adiciona Ocorrência
         if ($result == TRUE) {
+            // Adiciona Ocorrência
             $descricao = '';
             if (empty($data['usuarioDesignado'])) {
                 $descricao = "Atendimento designado de <b>".$data['usuario']."</b> para <b>".$data['grupoDesignado']."</b><BR>";
@@ -601,6 +599,35 @@ class AtendimentosDAO extends Conexao
                 'usuario' => $data['usuario'],
                 'descricao' => $descricao
                 ]);
+
+            // Estatísticas
+            // Primeiro atualiza o último registro de estatística
+            $idEstatistica = $this->getIdUltimaEstatistica($data['numAtendimento']);
+            if (!empty($idEstatistica)) {
+                $statement2 = $this->pdoRbx
+                ->prepare("UPDATE AtendimentoEstatistica 
+                            SET Fim = now(), 
+                                Duracao = TIME_TO_SEC(TIMEDIFF(now(), Inicio)), 
+                                UsuarioFim = :usuariofim 
+                            WHERE Id = :id");
+                $result2 = $statement2->execute([
+                    'usuariofim' => $data['usuario'],
+                    'id' => $idEstatistica
+                ]);
+            }
+            // Em seguida cria um novo registro
+            $statement2 = $this->pdoRbx
+            ->prepare("INSERT INTO AtendimentoEstatistica 
+                        (Atendimento,Topico,SituacaoOS,UsuarioOS,Grupo,Inicio,UsuarioInicio) 
+                        VALUES (:atendimento,:topico,:situacaoOS,:usuarioOS,:grupo,now(),:usuarioInicio)");
+            $result2 = $statement2->execute([
+                'atendimento' => $data['numAtendimento'],
+                'topico' => $data['topico'],
+                'situacaoOS' => $data['situacaoOS'],
+                'usuarioOS' => $data['usuario'],
+                'grupo' => 0,
+                'usuarioInicio' => $data['usuario']
+                ]);
         }
         return $result;
     }
@@ -613,8 +640,10 @@ class AtendimentosDAO extends Conexao
                     SET Causa = :causa, 
                         Solucao = :solucao, 
                         Usuario_BX = :usuario, 
-                        Data_BX = now(), 
-                        Situacao = 'F' 
+                        Data_BX = date_format(now(), '%Y-%m-%d'), 
+                        Hora_BX = date_format(now(), '%H:%i:%s'), 
+                        Situacao = 'F',
+                        SituacaoOS = 'C' 
                     WHERE Numero = :numero");
         $result = $statement->execute([
             'causa' =>  $data['causa'],
@@ -623,8 +652,8 @@ class AtendimentosDAO extends Conexao
             'numero' => $data['numAtendimento']
         ]);
 
-        // Adiciona Ocorrência
         if ($result == TRUE) {
+            // Adiciona Ocorrência
             $descricao = 'Assunto/Solução alterado(s)<BR>';
             $statement2 = $this->pdoRbx
             ->prepare("INSERT INTO AtendUltAlteracao (Atendimento, Usuario, Descricao, Data, Modo) 
@@ -634,7 +663,7 @@ class AtendimentosDAO extends Conexao
                 'usuario' => $data['usuario'],
                 'descricao' => $descricao
                 ]);
-            
+            // Adiciona Ocorrência
             $descricao = 'Atendimento encerrado<BR>';
             $statement2 = $this->pdoRbx
             ->prepare("INSERT INTO AtendUltAlteracao (Atendimento, Usuario, Descricao, Data, Modo) 
@@ -644,7 +673,37 @@ class AtendimentosDAO extends Conexao
                 'usuario' => $data['usuario'],
                 'descricao' => $descricao
                 ]);
+            
+            // Estatísticas
+            // Atualiza o último registro de estatística
+            $idEstatistica = $this->getIdUltimaEstatistica($data['numAtendimento']);
+            if (!empty($idEstatistica)) {
+                $statement2 = $this->pdoRbx
+                ->prepare("UPDATE AtendimentoEstatistica 
+                            SET Fim = now(), 
+                                Duracao = TIME_TO_SEC(TIMEDIFF(now(), Inicio)), 
+                                UsuarioFim = :usuariofim 
+                            WHERE Id = :id");
+                $result2 = $statement2->execute([
+                    'usuariofim' => $data['usuario'],
+                    'id' => $idEstatistica
+                ]);
+            }
         }
         return $result;
+    }
+
+    private function getIdUltimaEstatistica($pNumAtendimento): string
+    {
+        $id = '';
+        $strSQL = "SELECT Id FROM AtendimentoEstatistica 
+                    WHERE Atendimento = ".$pNumAtendimento." order by Id desc limit 1";
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        if (isset($result[0]['Id']) && !empty($result[0]['Id'])) {
+            $id = $result[0]['Id'];
+        }
+        return $id;
     }
 }
