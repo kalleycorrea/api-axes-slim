@@ -1,0 +1,31 @@
+<?php
+echo "rbx@axes";
+echo "<br>";
+echo "MD5";
+echo "<br>";
+echo md5("rbx@axes");
+echo "<br>";
+echo "SHA1";
+echo "<br>";
+echo sha1("rbx@axes");
+echo "<br>";
+echo "SHA-256";
+echo "<br>";
+echo hash('sha256',"rbx@axes");
+echo "<br>";
+echo "SHA-512";
+echo "<br>";
+echo hash('sha512',"rbx@axes");
+echo "<br>";
+echo "BASE64";
+echo "<br>";
+echo base64_encode("rbx@axes");
+echo "<br>";
+echo "password_hash";
+echo "<br>";
+echo password_hash("rbx@axes",PASSWORD_DEFAULT);
+echo "<br>";
+echo "crypt";
+echo "<br>";
+echo crypt("rbx@axes");
+?>
