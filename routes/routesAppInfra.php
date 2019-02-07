@@ -184,6 +184,7 @@ $app->post('/getatendimentocausas', AtendimentoController::class . ':getAtendime
 $app->post('/savechecklist', AtendimentoController::class . ':saveCheckList')->add($mwAuthPost);
 $app->post('/savedesignacao', AtendimentoController::class . ':saveDesignacao')->add($mwAuthPost);
 $app->post('/saveencerramento', AtendimentoController::class . ':saveEncerramento')->add($mwAuthPost);
+$app->post('/getequipes', UsuarioController::class . ':getEquipes')->add($mwAuthPost);
 
 $app->patch('/usuariolocalizacao', UsuarioController::class . ':updateLocalizacao');
 // =========================================

@@ -178,4 +178,20 @@ class UsuariosDAO extends Conexao
         $usuarios = $statement->fetchAll(\PDO::FETCH_ASSOC);
         return $usuarios;
     }
+
+    public function getEquipes($data): array
+    {
+        $strSQL = '';
+        if (empty($pGrupo)) {
+            $strSQL = "select usuario as Nome, perfil, idgrupo from isupergaus.usuarios 
+            where situacao = 'A' order by usuario";
+        } else {
+            $strSQL = "select usuario as Nome, perfil, idgrupo from isupergaus.usuarios 
+            where situacao = 'A' and idgrupo = ".$pGrupo." order by usuario";
+        }
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $usuarios = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $usuarios;
+    }
 }
