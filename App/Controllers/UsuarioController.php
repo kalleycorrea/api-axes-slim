@@ -101,10 +101,27 @@ final class UsuarioController
     {
         $data = $request->getParsedBody();
         $usuarioDAO = new UsuariosDAO();
-        $equipes = $usuarioDAO->getEquipes($data);
+        $equipes = $usuarioDAO->getEquipes();
 
         if (!empty($equipes)){
             $response = $response->withJson($equipes, 200); //200 OK
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                "message" => "no records"
+            ], 200);
+        }
+        return $response;
+    }
+
+    public function getUsuariosEquipe(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $usuarioDAO = new UsuariosDAO();
+        $usuariosEquipe = $usuarioDAO->getUsuariosEquipe();
+
+        if (!empty($usuariosEquipe)){
+            $response = $response->withJson($usuariosEquipe, 200); //200 OK
         }else{
             $response = $response->withJson([
                 "status" => "error",

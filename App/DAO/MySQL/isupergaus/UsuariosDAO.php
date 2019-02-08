@@ -179,19 +179,19 @@ class UsuariosDAO extends Conexao
         return $usuarios;
     }
 
-    public function getEquipes($data): array
+    public function getEquipes(): array
     {
-        $strSQL = '';
-        if (empty($pGrupo)) {
-            $strSQL = "select usuario as Nome, perfil, idgrupo from isupergaus.usuarios 
-            where situacao = 'A' order by usuario";
-        } else {
-            $strSQL = "select usuario as Nome, perfil, idgrupo from isupergaus.usuarios 
-            where situacao = 'A' and idgrupo = ".$pGrupo." order by usuario";
-        }
-        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement = $this->pdoAxes->prepare('select id, nome from equipes');
         $statement->execute();
-        $usuarios = $statement->fetchAll(\PDO::FETCH_ASSOC);
-        return $usuarios;
+        $equipes = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $equipes;
+    }
+
+    public function getUsuariosEquipe(): array
+    {
+        $statement = $this->pdoAxes->prepare("select usuario, equipe from usuarios");
+        $statement->execute();
+        $usuariosEquipe = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $usuariosEquipe;
     }
 }

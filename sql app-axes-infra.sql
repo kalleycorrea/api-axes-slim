@@ -259,3 +259,24 @@ SELECT TIME_TO_SEC(TIMEDIFF('2010-08-20 12:01:00', '2010-08-20 12:00:00')) diff;
 -- OS
 SELECT * FROM isupergaus.AtendimentoOS os where os.Atendimento=100903; -- 98762;
 SELECT atendimento, count(*) FROM isupergaus.AtendimentoOS group by atendimento;
+
+-- EQUIPES
+select usuario, Nome, perfil, master from isupergaus.usuarios where idgrupo = 4 and situacao='A' order by Nome;
+select a.numero, a.Topico, a.Cliente from isupergaus.Atendimentos a where a.Situacao='A' 
+and a.Usu_Designado in (select usuario from usuarios where situacao='A' and idgrupo=4 and perfil=7);
+
+select situacao, count(*) from isupergaus.Atendimentos group by situacao;
+select numero,situacao, Usu_Designado, Grupo_Designado from isupergaus.Atendimentos where Situacao='';
+
+-- BANCO EXTERNO DEV.AXES.COM.BR
+select * from equipes;
+insert into equipes (nome) values('Equipe 1');
+insert into equipes (nome) values('Equipe 2');
+
+select * from usuarios;
+insert into usuarios (usuario, senha, equipe) values('leandro.bezerra','1234',3);
+insert into usuarios (usuario, senha, equipe) values('escossio.farias','1234',3);
+insert into usuarios (usuario, senha, equipe) values('james.marques','1234',4);
+insert into usuarios (usuario, senha, equipe) values('matheus.henrique','1234',4);
+
+select usuario, equipe from usuarios where equipe=3;

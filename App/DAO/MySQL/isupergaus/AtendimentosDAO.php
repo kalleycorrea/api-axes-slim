@@ -62,7 +62,7 @@ class AtendimentosDAO extends Conexao
         left join isupergaus.usuarios u on a.Usu_Designado = u.usuario 
         left join isupergaus.UsuariosGrupoSetor ug on a.Grupo_Designado = ug.id 
         left join isupergaus.AtendTopicos t on a.Topico = t.Codigo 
-        WHERE a.Situacao = 'A'";
+        WHERE a.Situacao IN ('A','E')";
 
         //Atendimentos visualizados pelo técnico
         $whereTecnico = " and (a.Usu_Designado = ".$pUsuario." or a.Grupo_Designado = ".$pGrupo.")";
