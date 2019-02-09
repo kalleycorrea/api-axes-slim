@@ -189,9 +189,48 @@ class UsuariosDAO extends Conexao
 
     public function getUsuariosEquipe(): array
     {
-        $statement = $this->pdoAxes->prepare("select usuario, equipe from usuarios");
+        $statement = $this->pdoAxes->prepare("select usuario, equipe, '' as perfil, '' as quantAtendimentos 
+        from usuarios");
         $statement->execute();
         $usuariosEquipe = $statement->fetchAll(\PDO::FETCH_ASSOC);
+
+        if (!empty($usuariosEquipe)){
+            for ($i=0; $i < count($usuariosEquipe); $i++) {
+                $perfil = $this->getPerfil($usuariosEquipe[$i]['usuario']);
+                $atendimentos = $this->getQuantAtendimentos($usuariosEquipe[$i]['usuario']);
+                $usuariosEquipe[$i]['perfil'] = $perfil;
+                $usuariosEquipe[$i]['quantAtendimentos'] = ($perfil == 'Auxiliar' && $atendimentos == 0 ? '' : $atendimentos);
+            }
+        }
+        // Ordena o array multidimensional pelo campo 'perfil' decrescente
+        // Pra sempre mostrar na listagem de equipes primeiramente o técnico
+        usort($usuariosEquipe, function($a, $b) {
+            return -($a['perfil'] <=> $b['perfil']);
+        });
         return $usuariosEquipe;
+    }
+
+    private function getQuantAtendimentos($pUsuario) {
+        $strSQL = "select Usu_Designado, count(*) as atendimentos from isupergaus.Atendimentos 
+            where Usu_Designado = '".$pUsuario."' and Situacao in ('A','E') group by Usu_Designado";
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        if (!empty($result)) {
+            return $result[0]['atendimentos'];
+        }
+        return 0;
+    }
+
+    private function getPerfil($pUsuario) {
+        $strSQL = "select if(ifnull(perfil,0) = 7, 'Técnico', if(ifnull(perfil,0) = 19, 'Auxiliar', '')) as perfil 
+            from isupergaus.usuarios where usuario='".$pUsuario."'";
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        if (!empty($result)) {
+            return $result[0]['perfil'];
+        }
+        return '';
     }
 }

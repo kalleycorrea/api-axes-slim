@@ -262,13 +262,15 @@ SELECT atendimento, count(*) FROM isupergaus.AtendimentoOS group by atendimento;
 
 -- EQUIPES
 select usuario, Nome, perfil, master from isupergaus.usuarios where idgrupo = 4 and situacao='A' order by Nome;
-select a.numero, a.Topico, a.Cliente from isupergaus.Atendimentos a where a.Situacao='A' 
+-- Atendimentos Infraestrutura
+select a.numero, Usu_Designado, a.Topico, a.Cliente from isupergaus.Atendimentos a where a.Situacao='A' 
 and a.Usu_Designado in (select usuario from usuarios where situacao='A' and idgrupo=4 and perfil=7);
 
 select situacao, count(*) from isupergaus.Atendimentos group by situacao;
 select numero,situacao, Usu_Designado, Grupo_Designado from isupergaus.Atendimentos where Situacao='';
 
--- BANCO EXTERNO DEV.AXES.COM.BR
+
+-- DATABASE EXTERNO DEV.AXES.COM.BR
 select * from equipes;
 insert into equipes (nome) values('Equipe 1');
 insert into equipes (nome) values('Equipe 2');
@@ -279,4 +281,11 @@ insert into usuarios (usuario, senha, equipe) values('escossio.farias','1234',3)
 insert into usuarios (usuario, senha, equipe) values('james.marques','1234',4);
 insert into usuarios (usuario, senha, equipe) values('matheus.henrique','1234',4);
 
-select usuario, equipe from usuarios where equipe=3;
+select usuario, equipe, 'Técnico' as perfil, 0 as quantAtendimentos from usuarios where equipe=3;
+
+-- DATABASE ROUTERBOX
+select Usu_Designado, count(*) as atendimentos from isupergaus.Atendimentos 
+where Usu_Designado = 'antonio.giliard' and Situacao in ('A','E') group by Usu_Designado;
+
+select usuario, if(ifnull(perfil,0) = 7, 'Técnico', if(ifnull(perfil,0) = 19, 'Auxiliar', '')) as perfil 
+from isupergaus.usuarios where usuario='kalley';
