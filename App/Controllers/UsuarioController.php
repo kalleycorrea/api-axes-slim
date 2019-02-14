@@ -130,4 +130,101 @@ final class UsuarioController
         }
         return $response;
     }
+
+    public function addEquipe(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $usuarioDAO = new UsuariosDAO();
+        $result = $usuarioDAO->addEquipe($data);
+
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => "Equipe Adicionada"
+            ], 200);
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                'message' => "Falha na inserção da Equipe"
+            ], 502); //502 Bad Gateway
+        }
+        return $response;
+    }
+
+    public function deleteEquipe(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $usuarioDAO = new UsuariosDAO();
+        $result = $usuarioDAO->deleteEquipe($data);
+
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => "Equipe Deletada"
+            ], 200);
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                'message' => "Falha na remoção da Equipe"
+            ], 502); //502 Bad Gateway
+        }
+        return $response;
+    }
+
+    public function getUsuariosSemEquipe(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $usuarioDAO = new UsuariosDAO();
+        $usuariosSemEquipe = $usuarioDAO->getUsuariosSemEquipe();
+
+        if (!empty($usuariosSemEquipe)){
+            $response = $response->withJson($usuariosSemEquipe, 200); //200 OK
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                "message" => "no records"
+            ], 200);
+        }
+        return $response;
+    }
+
+    public function addUsuarioEquipe(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $usuarioDAO = new UsuariosDAO();
+        $result = $usuarioDAO->addUsuarioEquipe($data);
+
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => "Usuário Adicionado na Equipe"
+            ], 200);
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                'message' => "Falha na inserção do Usuário"
+            ], 502); //502 Bad Gateway
+        }
+        return $response;
+    }
+
+    public function deleteUsuarioEquipe(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $usuarioDAO = new UsuariosDAO();
+        $result = $usuarioDAO->deleteUsuarioEquipe($data);
+
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => "Usuário Removido da Equipe"
+            ], 200);
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                'message' => "Falha na remoção do Usuário"
+            ], 502); //502 Bad Gateway
+        }
+        return $response;
+    }
 }

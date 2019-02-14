@@ -181,7 +181,7 @@ class UsuariosDAO extends Conexao
 
     public function getEquipes(): array
     {
-        $statement = $this->pdoAxes->prepare('select id, nome from equipes');
+        $statement = $this->pdoAxes->prepare('select id, nome from equipes order by nome');
         $statement->execute();
         $equipes = $statement->fetchAll(\PDO::FETCH_ASSOC);
         return $equipes;
@@ -189,7 +189,7 @@ class UsuariosDAO extends Conexao
 
     public function getUsuariosEquipe(): array
     {
-        $statement = $this->pdoAxes->prepare("select usuario, equipe, '' as perfil, '' as quantAtendimentos 
+        $statement = $this->pdoAxes->prepare("select usuario, ifnull(equipe,0) equipe, '' as perfil, '' as quantAtendimentos 
         from usuarios");
         $statement->execute();
         $usuariosEquipe = $statement->fetchAll(\PDO::FETCH_ASSOC);
@@ -232,5 +232,111 @@ class UsuariosDAO extends Conexao
             return $result[0]['perfil'];
         }
         return '';
+    }
+
+    public function addEquipe($data): bool
+    {
+        $result = FALSE;
+        $statement = $this->pdoAxes
+        ->prepare("INSERT INTO equipes (Nome) VALUES (:nome)");
+        $result = $statement->execute([
+            'nome' => $data['nomeEquipe']
+            ]);
+        return $result;
+    }
+
+    public function deleteEquipe($data): bool
+    {
+        $result = FALSE;
+        $statement = $this->pdoAxes
+        ->prepare("DELETE FROM equipes WHERE id = :id");
+        $result = $statement->execute([
+            'id' => $data['idEquipe']
+            ]);
+
+        $statement2 = $this->pdoAxes
+        ->prepare('UPDATE usuarios SET equipe = DEFAULT WHERE equipe = :equipe');
+        $result2 = $statement2->execute([
+        'equipe' => $data['idEquipe']
+        ]);
+        return $result;
+    }
+
+    public function getUsuariosSemEquipe(): array
+    {
+
+        //$usuario = array_merge($usuario, array('setpassword' => 'N'));
+        //array_push($usuario, array('setpassword' => 'N'));
+        //$usuario += ['setpassword' => 'N'];
+
+        // idgrupo: 1-Tecnologia da Informação; 4-Infraestrutura
+        $strSQL = "select usuario as Nome from isupergaus.usuarios 
+                    where situacao = 'A' and idgrupo in (1,4) order by usuario";
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $usuarios = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $result = array();
+        for ($i=0; $i < count($usuarios); $i++) {
+            if (!$this->UsuarioTemEquipe($usuarios[$i]['Nome'])) {
+                $result[] = array('Nome' => $usuarios[$i]['Nome']);
+            }
+        }
+        return $result;
+    }
+
+    private function UsuarioTemEquipe($usuario): bool
+    {
+        $return = FALSE;
+        $statement = $this->pdoAxes->prepare("select usuario from usuarios where equipe is null and usuario = '".$usuario."'");
+        $statement->execute();
+        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        if (!empty($result)){
+            $return = TRUE;
+        }
+        return $return;
+    }
+
+    private function UsuarioExiste($usuario): bool
+    {
+        $return = FALSE;
+        $statement = $this->pdoAxes->prepare("select usuario from usuarios where usuario = '".$usuario."'");
+        $statement->execute();
+        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        if (!empty($result)){
+            $return = TRUE;
+        }
+        return $return;
+    }
+
+    public function addUsuarioEquipe($data): bool
+    {
+        $result = FALSE;
+        if ($this->UsuarioExiste($data['membro'])) {
+            $statement = $this->pdoAxes
+            ->prepare('UPDATE usuarios SET equipe = :equipe WHERE usuario = :usuario');
+            $result = $statement->execute([
+            'equipe' => $data['idEquipe'],
+            'usuario' => $data['membro']
+            ]);
+        } else {
+            $statement = $this->pdoAxes
+            ->prepare("INSERT INTO usuarios (usuario, equipe) VALUES (:usuario, :equipe)");
+            $result = $statement->execute([
+                'usuario' => $data['membro'],
+                'equipe' => $data['idEquipe']
+                ]);
+        }
+        return $result;
+    }
+
+    public function deleteUsuarioEquipe($data): bool
+    {
+        $result = FALSE;
+        $statement = $this->pdoAxes
+        ->prepare('UPDATE usuarios SET equipe = DEFAULT WHERE usuario = :usuario');
+        $result = $statement->execute([
+        'usuario' => $data['membro']
+        ]);
+        return $result;
     }
 }

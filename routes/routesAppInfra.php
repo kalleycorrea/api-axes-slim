@@ -186,6 +186,11 @@ $app->post('/savedesignacao', AtendimentoController::class . ':saveDesignacao')-
 $app->post('/saveencerramento', AtendimentoController::class . ':saveEncerramento')->add($mwAuthPost);
 $app->post('/getequipes', UsuarioController::class . ':getEquipes')->add($mwAuthPost);
 $app->post('/getusuariosequipe', UsuarioController::class . ':getUsuariosEquipe')->add($mwAuthPost);
+$app->post('/addequipe', UsuarioController::class . ':addEquipe')->add($mwAuthPost);
+$app->post('/deleteequipe', UsuarioController::class . ':deleteEquipe')->add($mwAuthPost);
+$app->post('/getusuariossemequipe', UsuarioController::class . ':getUsuariosSemEquipe')->add($mwAuthPost);
+$app->post('/addusuarioequipe', UsuarioController::class . ':addUsuarioEquipe')->add($mwAuthPost);
+$app->post('/deleteusuarioequipe', UsuarioController::class . ':deleteUsuarioEquipe')->add($mwAuthPost);
 
 $app->patch('/usuariolocalizacao', UsuarioController::class . ':updateLocalizacao');
 // =========================================
