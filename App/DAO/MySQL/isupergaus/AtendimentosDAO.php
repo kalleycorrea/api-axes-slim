@@ -71,10 +71,10 @@ class AtendimentosDAO extends Conexao
             $equipe = $this->getEquipe($pUsuario);
             $strEquipe = "'".implode("','",$equipe)."'";
             if (!empty($equipe)) {
-                //Atendimentos visualizados pela equipe
-                $where = " and (a.Usu_Designado IN (".$strEquipe.") or a.Grupo_Designado = ".$pGrupo.")";
+                //Atendimentos visualizados pela equipe (atendimentos designados aos membros da equipe e ao grupo)
+                $where = " and (a.Usu_Designado in (".$strEquipe.") or a.Grupo_Designado = ".$pGrupo.")";
             } else {
-                //Atendimentos visualizados por usuários sem equipe
+                //Atendimentos visualizados por usuários sem equipe (atendimentos designados a esse usuário e ao grupo)
                 $where = " and (a.Usu_Designado = '".$pUsuario."' or a.Grupo_Designado = ".$pGrupo.")";
             }
         }
@@ -94,7 +94,7 @@ class AtendimentosDAO extends Conexao
         $statement = $this->pdoAxes->prepare("select u.usuario from usuarios u 
             where u.equipe = (select equipe from usuarios where usuario='".$usuario."')");
         $statement->execute();
-        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $result = $statement->fetchAll(\PDO::FETCH_COLUMN);
         return $result;
     }
 
