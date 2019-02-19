@@ -287,7 +287,7 @@ class UsuariosDAO extends Conexao
     private function UsuarioTemEquipe($usuario): bool
     {
         $return = FALSE;
-        $statement = $this->pdoAxes->prepare("select usuario from usuarios where equipe is null and usuario = '".$usuario."'");
+        $statement = $this->pdoAxes->prepare("select usuario from usuarios where equipe is not null and usuario = '".$usuario."'");
         $statement->execute();
         $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
         if (!empty($result)){

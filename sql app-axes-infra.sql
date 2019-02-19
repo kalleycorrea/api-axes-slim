@@ -282,10 +282,17 @@ insert into usuarios (usuario, senha, equipe) values('james.marques','1234',4);
 insert into usuarios (usuario, senha, equipe) values('matheus.henrique','1234',4);
 
 select usuario, equipe, 'Técnico' as perfil, 0 as quantAtendimentos from usuarios where equipe=3;
+UPDATE usuarios SET equipe = 3 WHERE equipe IS NULL;
+select usuario from usuarios where equipe is not null; -- usuario = 'leandro.bezerra'
+select u.usuario from usuarios u where u.equipe = (select equipe from usuarios where usuario='leandro.bezerra');  -- 'leandro.bezerra'
 
 -- DATABASE ROUTERBOX
 select Usu_Designado, count(*) as atendimentos from isupergaus.Atendimentos 
 where Usu_Designado = 'antonio.giliard' and Situacao in ('A','E') group by Usu_Designado;
 
-select usuario, if(ifnull(perfil,0) = 7, 'Técnico', if(ifnull(perfil,0) = 19, 'Auxiliar', '')) as perfil 
-from isupergaus.usuarios where usuario='kalley';
+-- Grupoif(u.master='S','G',if(u.perfil=19,'A','T')) as tipo
+select usuario, terminal senha, if(ifnull(perfil,0) = 7, 'Técnico', if(ifnull(perfil,0) = 19, 'Auxiliar', '')) as perfil 
+from isupergaus.usuarios where usuario in ('kalley', 'amandabonfim', 'antonio.giliard', 'escossio.farias', 'james.marques', 'leandro.bezerra', 'matheus.henrique');
+-- update usuarios set terminal = '9999' where usuario in ('antonio.giliard', 'escossio.farias', 'james.marques', 'leandro.bezerra', 'matheus.henrique');
+
+select * from UsuariosGrupoSetor

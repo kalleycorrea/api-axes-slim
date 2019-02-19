@@ -33,7 +33,7 @@ class AtendimentosDAO extends Conexao
         a.Usu_Designado, 
         a.Usuario_BX, 
         a.Grupo_Designado,
-        if (a.Usu_Designado is null, 'Técnico', a.Usu_Designado) as Equipe, 
+        ug.Grupo DescGrupoDesignado,
         ct.Situacao,
         case ct.Situacao 
                 when 'A' then 'Ativo' 
@@ -64,11 +64,20 @@ class AtendimentosDAO extends Conexao
         left join isupergaus.AtendTopicos t on a.Topico = t.Codigo 
         WHERE a.Situacao IN ('A','E')";
 
-        //Atendimentos visualizados pelo técnico
-        $whereTecnico = " and (a.Usu_Designado = ".$pUsuario." or a.Grupo_Designado = ".$pGrupo.")";
-        //Atendimentos visualizados pelo Gestor
-        $whereGestor = " and (a.Usu_Designado in (select u2.usuario from isupergaus.usuarios u2 where u2.idgrupo = ".$pGrupo.") or a.Grupo_Designado = ".$pGrupo.")";
-        $where = ($pTipo == 'T') ? $whereTecnico : $whereGestor;
+        //Atendimentos visualizados pelo Gestor (todos os atendimentos do grupo e dos usuários do grupo)
+        if ($pTipo == 'G') {
+            $where = " and (a.Usu_Designado in (select u2.usuario from isupergaus.usuarios u2 where u2.idgrupo = ".$pGrupo.") or a.Grupo_Designado = ".$pGrupo.")";
+        } else {
+            $equipe = $this->getEquipe($pUsuario);
+            $strEquipe = "'".implode("','",$equipe)."'";
+            if (!empty($equipe)) {
+                //Atendimentos visualizados pela equipe
+                $where = " and (a.Usu_Designado IN (".$strEquipe.") or a.Grupo_Designado = ".$pGrupo.")";
+            } else {
+                //Atendimentos visualizados por usuários sem equipe
+                $where = " and (a.Usu_Designado = '".$pUsuario."' or a.Grupo_Designado = ".$pGrupo.")";
+            }
+        }
 
         $orderBy = " order by a.Prioridade, date_format(concat(a.Data_AB,' ',a.Hora_AB), '%d/%m/%Y %H:%i:%s')";
 
@@ -78,6 +87,15 @@ class AtendimentosDAO extends Conexao
         $statement->execute();
         $atendimentos = $statement->fetchAll(\PDO::FETCH_ASSOC);
         return $atendimentos;
+    }
+
+    private function getEquipe($usuario): array
+    {
+        $statement = $this->pdoAxes->prepare("select u.usuario from usuarios u 
+            where u.equipe = (select equipe from usuarios where usuario='".$usuario."')");
+        $statement->execute();
+        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $result;
     }
 
     public function updateSituacaoOS($pUsuario, $pNumAtendimento, $pSituacaoOS, $pSituacaoAnterior): bool
