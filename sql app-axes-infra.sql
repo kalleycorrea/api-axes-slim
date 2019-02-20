@@ -96,6 +96,7 @@ left join isupergaus.usuarios u on a.Usu_Designado = u.usuario
 left join isupergaus.UsuariosGrupoSetor ug on a.Grupo_Designado = ug.id 
 left join isupergaus.AtendTopicos t on a.Topico = t.Codigo 
 WHERE a.Situacao = 'A' -- and a.Topico in (36, 46, 47, 112, 113, 155) 
+-- c.Nome like '%Rita de Cássia%'
  -- visualização técnico
 -- and (a.Usu_Designado = 'amandabonfim' or a.Grupo_Designado = 4) 
 -- visualização gestor
@@ -239,7 +240,9 @@ SELECT Data_AB, Hora_AB, Data_BX, Hora_BX FROM isupergaus.Atendimentos a where a
 -- 2019-02-05 09:31:30
 
 -- ESTATÍSTICA
-SELECT * FROM isupergaus.AtendimentoEstatistica es where es.Atendimento=100903; -- 100905 104186 100905 100903 100776;
+SELECT * FROM isupergaus.AtendimentoEstatistica es where es.Atendimento=105716; -- 100903 100905 104186 100905 100903 100776;
+SELECT * FROM isupergaus.AtendimentoEstatistica es where es.Grupo <> 0;
+select * from isupergaus.UsuariosGrupoSetor;
 -- Id,Atendimento,Topico,SituacaoOS,UsuarioOS,Grupo,Inicio,Fim,Duracao,UsuarioInicio,UsuarioFim
 -- delete from AtendimentoEstatistica where Id in (154397);
 -- update AtendimentoEstatistica set Fim = default, Duracao = default, UsuarioFim = '' where Id=144431;
@@ -276,10 +279,10 @@ insert into equipes (nome) values('Equipe 1');
 insert into equipes (nome) values('Equipe 2');
 
 select * from usuarios;
-insert into usuarios (usuario, senha, equipe) values('leandro.bezerra','1234',3);
-insert into usuarios (usuario, senha, equipe) values('escossio.farias','1234',3);
-insert into usuarios (usuario, senha, equipe) values('james.marques','1234',4);
-insert into usuarios (usuario, senha, equipe) values('matheus.henrique','1234',4);
+insert into usuarios (usuario, senha, equipe) values('leandro.bezerra','9999',3);
+insert into usuarios (usuario, senha, equipe) values('escossio.farias','9999',3);
+insert into usuarios (usuario, senha, equipe) values('james.marques','9999',4);
+insert into usuarios (usuario, senha, equipe) values('matheus.henrique','9999',4);
 
 select usuario, equipe, 'Técnico' as perfil, 0 as quantAtendimentos from usuarios where equipe=3;
 UPDATE usuarios SET equipe = 3 WHERE equipe IS NULL;
@@ -294,5 +297,6 @@ where Usu_Designado = 'antonio.giliard' and Situacao in ('A','E') group by Usu_D
 select usuario, terminal senha, if(ifnull(perfil,0) = 7, 'Técnico', if(ifnull(perfil,0) = 19, 'Auxiliar', '')) as perfil 
 from isupergaus.usuarios where usuario in ('kalley', 'amandabonfim', 'antonio.giliard', 'escossio.farias', 'james.marques', 'leandro.bezerra', 'matheus.henrique');
 -- update usuarios set terminal = '9999' where usuario in ('antonio.giliard', 'escossio.farias', 'james.marques', 'leandro.bezerra', 'matheus.henrique');
+-- update usuarios set terminal = '9999' where perfil in (7,19);
 
 select * from UsuariosGrupoSetor

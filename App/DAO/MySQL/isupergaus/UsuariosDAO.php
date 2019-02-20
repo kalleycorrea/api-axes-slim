@@ -15,21 +15,10 @@ class UsuariosDAO extends Conexao
     public function getUsuario($pUsuario, $pSenha): array
     {
         $urlImgUserRbx = getenv('URL_IMG_USER_RBX');
-        /*
-        $usuario = $this->pdoRbx
-            ->query('SELECT
-                    usuario,
-                    Nome,
-                    situacao,
-                    Foto,
-                    idgrupo,
-                    perfil 
-                FROM usuarios WHERE usuario=')
-            ->fetchAll(\PDO::FETCH_ASSOC);
-        */
+        
         $statement = $this->pdoRbx
             ->prepare("SELECT usuario, Terminal senha, Nome, idgrupo, 
-            if(master='S','G',if(perfil=19,'A','T')) as tipo, 
+            if(master='S','G',if(perfil=19,'A','T')) as tipo, '' as equipe, 
             MobileDeviceId, Latitude, Longitude, MobileLastDataReceived 
             FROM usuarios 
             WHERE usuario = :usuario AND Terminal = :senha AND situacao = 'A' ;");
@@ -39,6 +28,13 @@ class UsuariosDAO extends Conexao
         $statement->bindParam(':senha', $pSenha, \PDO::PARAM_STR);
         $statement->execute();
         $usuario = $statement->fetchAll(\PDO::FETCH_ASSOC);
+
+        if (!empty($usuario)){
+            for ($i=0; $i < count($usuario); $i++) {
+                $equipe = $this->getEquipe($usuario[$i]['usuario']);
+                $usuario[$i]['equipe'] = $equipe;
+            }
+        }
         return $usuario;
 
         // Utilizar a senha do banco de dados auxiliar
@@ -79,6 +75,17 @@ class UsuariosDAO extends Conexao
         }
         return [];
         */
+    }
+
+    private function getEquipe($usuario)
+    {
+        $statement = $this->pdoAxes->prepare("select equipe from usuarios where usuario='".$usuario."'");
+        $statement->execute();
+        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        if (!empty($result)) {
+            return $result[0]['equipe'];
+        }
+        return '';
     }
 
     public function updateUsuario(UsuarioModel $usuario): bool

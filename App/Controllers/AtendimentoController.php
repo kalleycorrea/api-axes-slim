@@ -22,7 +22,7 @@ final class AtendimentoController
         $data = $request->getParsedBody();
         $atendimentosDAO = new AtendimentosDAO();
         //$atendimentos = $atendimentosDAO->getModuloTecnico($request->getQueryParams()['usuario']);
-        $atendimentos = $atendimentosDAO->getAtendimentos($data['usuario'], $data['tipo'], $data['grupo']);
+        $atendimentos = $atendimentosDAO->getAtendimentos($data['usuario'], $data['tipo'], $data['grupo'], $data['filtroBusca']);
 
         if (!empty($atendimentos)){
             $response = $response->withJson($atendimentos, 200); //200 OK
