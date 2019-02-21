@@ -71,11 +71,11 @@ class AtendimentosDAO extends Conexao
             if ($pTipo == 'G') {
                 $where = $where . "(a.Usu_Designado in (select u2.usuario from isupergaus.usuarios u2 where u2.idgrupo = ".$pGrupo.") or a.Grupo_Designado = ".$pGrupo.")";
             } else {
-                $equipe = $this->getEquipe($pUsuario);
-                $strEquipe = "'".implode("','",$equipe)."'";
-                if (!empty($equipe)) {
+                $usuarios = $this->getUsuariosByEquipe($pUsuario);
+                $strUsuarios = "'".implode("','",$usuarios)."'";
+                if (!empty($usuarios)) {
                     //Atendimentos visualizados pela equipe (atendimentos designados aos membros da equipe e ao grupo)
-                    $where = $where . "(a.Usu_Designado in (".$strEquipe.") or a.Grupo_Designado = ".$pGrupo.")";
+                    $where = $where . "(a.Usu_Designado in (".$strUsuarios.") or a.Grupo_Designado = ".$pGrupo.")";
                 } else {
                     //Atendimentos visualizados por usuários sem equipe (atendimentos designados a esse usuário e ao grupo)
                     $where = $where ."(a.Usu_Designado = '".$pUsuario."' or a.Grupo_Designado = ".$pGrupo.")";
@@ -89,19 +89,18 @@ class AtendimentosDAO extends Conexao
                 switch ($tipoBusca) {
                     case '@':
                         // Nome Cliente
-                        $where="c.Nome like '%".substr($pFiltroBusca, 1)."%'";
+                        $where="c.Nome like '%".substr($pFiltroBusca, 1)."%' OR c.Sigla like '%".substr($pFiltroBusca, 1)."%'";
                         break;
                     case '#':
                         // Tópico
-                        $where="t.Descricao like '%".substr($pFiltroBusca, 1)."%'";
+                        $where="t.Descricao like '%".substr($pFiltroBusca, 1)."%' AND a.Situacao IN ('A','E')";
                         break;
                     case '$':
                         // Nome Usuário
                         $where="a.Usu_Designado like '".substr($pFiltroBusca, 1)."%' OR a.Usuario_BX like '".substr($pFiltroBusca, 1)."%'";
                         break;
                     default:
-                        $where="1 = 0";
-                        break;
+                        return [];
                 }
             }
         }
@@ -116,7 +115,7 @@ class AtendimentosDAO extends Conexao
         return $atendimentos;
     }
 
-    private function getEquipe($usuario): array
+    private function getUsuariosByEquipe($usuario): array
     {
         $statement = $this->pdoAxes->prepare("select u.usuario from usuarios u 
             where u.equipe = (select equipe from usuarios where usuario='".$usuario."')");
@@ -686,15 +685,15 @@ class AtendimentosDAO extends Conexao
                 ]);
 
             // Estatísticas Axes
-            $equipe = $this->getEquipe($data['UltimoUsuarioDesignado']);
-            if (!empty($equipe)) {
-                for ($i=0; $i < count($equipe); $i++) {
+            $usuarios = $this->getUsuariosByEquipe($data['UltimoUsuarioDesignado']);
+            if (!empty($usuarios)) {
+                for ($i=0; $i < count($usuarios); $i++) {
                     $statement2 = $this->pdoAxes
                     ->prepare("INSERT INTO estatistica_usuarios 
                                 (usuario,atendimento,topico,inicio,fim,finalizado) 
                                 VALUES (:usuario,:atendimento,:topico,:inicio,now(),'N')");
                     $result2 = $statement2->execute([
-                        'usuario' => $equipe[i],
+                        'usuario' => $usuarios[$i],
                         'atendimento' => $data['numAtendimento'],
                         'topico' => $data['topico'],
                         'inicio' => $dataInicio
@@ -782,15 +781,15 @@ class AtendimentosDAO extends Conexao
             }
 
             // Estatísticas Axes
-            $equipe = $this->getEquipe($data['usuarioDesignado']);
-            if (!empty($equipe)) {
-                for ($i=0; $i < count($equipe); $i++) {
+            $usuarios = $this->getUsuariosByEquipe($data['usuarioDesignado']);
+            if (!empty($usuarios)) {
+                for ($i=0; $i < count($usuarios); $i++) {
                     $statement2 = $this->pdoAxes
                     ->prepare("INSERT INTO estatistica_usuarios 
                                 (usuario,atendimento,topico,inicio,fim,finalizado) 
                                 VALUES (:usuario,:atendimento,:topico,:inicio,now(),'S')");
                     $result2 = $statement2->execute([
-                        'usuario' => $equipe[i],
+                        'usuario' => $usuarios[$i],
                         'atendimento' => $data['numAtendimento'],
                         'topico' => $data['topico'],
                         'inicio' => $dataInicio

@@ -191,6 +191,7 @@ $app->post('/deleteequipe', UsuarioController::class . ':deleteEquipe')->add($mw
 $app->post('/getusuariossemequipe', UsuarioController::class . ':getUsuariosSemEquipe')->add($mwAuthPost);
 $app->post('/addusuarioequipe', UsuarioController::class . ':addUsuarioEquipe')->add($mwAuthPost);
 $app->post('/deleteusuarioequipe', UsuarioController::class . ':deleteUsuarioEquipe')->add($mwAuthPost);
+$app->post('/updatelocation', UsuarioController::class . ':updateLocation')->add($mwAuthPost);
 
 $app->patch('/usuariolocalizacao', UsuarioController::class . ':updateLocalizacao');
 // =========================================

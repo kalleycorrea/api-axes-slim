@@ -15,7 +15,7 @@ class UsuariosDAO extends Conexao
     public function getUsuario($pUsuario, $pSenha): array
     {
         $urlImgUserRbx = getenv('URL_IMG_USER_RBX');
-        
+
         $statement = $this->pdoRbx
             ->prepare("SELECT usuario, Terminal senha, Nome, idgrupo, 
             if(master='S','G',if(perfil=19,'A','T')) as tipo, '' as equipe, 
@@ -31,7 +31,7 @@ class UsuariosDAO extends Conexao
 
         if (!empty($usuario)){
             for ($i=0; $i < count($usuario); $i++) {
-                $equipe = $this->getEquipe($usuario[$i]['usuario']);
+                $equipe = $this->getEquipeByUsuario($usuario[$i]['usuario']);
                 $usuario[$i]['equipe'] = $equipe;
             }
         }
@@ -77,7 +77,39 @@ class UsuariosDAO extends Conexao
         */
     }
 
-    private function getEquipe($usuario)
+    public function updateLocation($data): bool
+    {
+        $result = FALSE;
+
+        if (!empty($data['equipe'])) {
+            $usuarios = $this->getUsuariosByEquipe($data['equipe']);
+            if (!empty($usuarios)) {
+                for ($i=0; $i < count($usuarios); $i++) {
+                    $statement = $this->pdoRbx
+                    ->prepare('UPDATE usuarios SET Latitude = :latitude, Longitude = :longitude, 
+                        MobileLastDataReceived = now() WHERE usuario = :usuario');
+                    $result = $statement->execute([
+                        'usuario' => $usuarios[$i]['usuario'],
+                        'latitude' => $data['latitude'],
+                        'longitude' => $data['longitude']
+                    ]);
+                }
+            }
+        }
+        else {
+            $statement = $this->pdoRbx
+            ->prepare('UPDATE usuarios SET Latitude = :latitude, Longitude = :longitude, 
+                MobileLastDataReceived = now() WHERE usuario = :usuario');
+            $result = $statement->execute([
+                'usuario' => $data['usuario'],
+                'latitude' => $data['latitude'],
+                'longitude' => $data['longitude']
+            ]);
+        }
+        return $result;
+    }
+
+    private function getEquipeByUsuario($usuario)
     {
         $statement = $this->pdoAxes->prepare("select equipe from usuarios where usuario='".$usuario."'");
         $statement->execute();
@@ -86,6 +118,14 @@ class UsuariosDAO extends Conexao
             return $result[0]['equipe'];
         }
         return '';
+    }
+
+    private function getUsuariosByEquipe($equipe): array
+    {
+        $statement = $this->pdoAxes->prepare("select usuario from usuarios where equipe = ".$equipe);
+        $statement->execute();
+        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $result;
     }
 
     public function updateUsuario(UsuarioModel $usuario): bool

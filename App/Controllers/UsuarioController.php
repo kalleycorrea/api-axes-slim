@@ -63,6 +63,24 @@ final class UsuarioController
         return $response;
     }
 
+    public function updateLocation(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $usuarioDAO = new UsuariosDAO();
+        $result = $usuarioDAO->updateLocation($data);
+
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success"
+            ], 200);
+        }else{
+            $response = $response->withJson([
+                "status" => "error"
+            ], 502); //502 Bad Gateway
+        }
+        return $response;
+    }
+
     public function getGrupoUsuarios(Request $request, Response $response, array $args): Response
     {
         $data = $request->getParsedBody();
