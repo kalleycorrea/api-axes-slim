@@ -5,7 +5,7 @@ concat('https://rbx.axes.com.br/routerbox/file/img/',if(ifnull(Foto,'')='','cont
 from isupergaus.usuarios u 
 where 
 -- u.idgrupo = 4 
-u.usuario='kalley' 
+u.usuario in ('antonio.giliard', 'escossio.farias', 'amandabonfim') -- 'kalley' 
 -- (u.idgrupo = 4 and u.perfil in (7,19)) or (u.idgrupo = 4 and u.master = 'S') or (u.usuario='kalley')
 order by u.Nome, u.perfil;
 
@@ -44,8 +44,9 @@ Situação OS
     B: Abortada
 */
 
-SELECT a.Numero NumAtendimento, a.Protocolo, c.Codigo CodCliente, c.Nome Cliente, c.Sigla Apelido, a.Tipo,
-a.Contrato, p.DescricaoComercial Plano, p.Descricao Plano2, t.Descricao DescTopico, a.Topico, a.Prioridade, a.Assunto, a.Solucao, a.Causa, 
+SELECT a.Numero NumAtendimento, a.Protocolo, c.Codigo CodCliente, c.Nome Cliente, c.Sigla Apelido, a.Tipo, 
+c.TelCelular, c.TelComercial, c.TelResidencial, a.Contrato, p.DescricaoComercial Plano, p.Descricao Plano2, 
+t.Descricao DescTopico, a.Topico, a.Prioridade, a.Assunto, a.Solucao, a.Causa, 
 date_format(concat(a.Data_AB," ",a.Hora_AB), "%d/%m/%Y %H:%i") Abertura,
 date_format(concat(a.Data_BX," ",a.Hora_BX), "%d/%m/%Y %H:%i") Fechamento,
 replace(isupergaus.rbx_sla(a.Numero, 'N'),'?','ú') SLA,  
@@ -108,6 +109,7 @@ WHERE a.Situacao = 'A' -- and a.Topico in (36, 46, 47, 112, 113, 155)
     )*/
 and a.Numero = 100903 
 order by a.Prioridade, date_format(concat(a.Data_AB," ",a.Hora_AB), "%d/%m/%Y %H:%i:%s");
+
 
 -- SLA
 select CONVERT(isupergaus.rbx_sla(96833, 'N') USING utf8) SLA;

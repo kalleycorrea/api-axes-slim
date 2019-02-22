@@ -14,8 +14,8 @@ class AtendimentosDAO extends Conexao
     public function getAtendimentos($pUsuario, $pTipo, $pGrupo, $pFiltroBusca): array
     {
         $strSQL = "SELECT a.Numero NumAtendimento, a.Protocolo, c.Codigo CodCliente, 
-        c.Nome Cliente, c.Sigla Apelido, a.Tipo, a.Contrato, p.DescricaoComercial Plano, t.Descricao DescTopico, 
-        a.Topico, a.Prioridade, a.Assunto, a.Solucao, 
+        c.Nome Cliente, c.Sigla Apelido, a.Tipo, c.TelCelular, c.TelComercial, c.TelResidencial, a.Contrato, 
+        p.DescricaoComercial Plano, t.Descricao DescTopico, a.Topico, a.Prioridade, a.Assunto, a.Solucao, 
         date_format(concat(a.Data_AB,' ',a.Hora_AB), '%d/%m/%Y %H:%i') Abertura,
         replace(isupergaus.rbx_sla(a.Numero, 'N'),'?','ú') SLA, 
         g.Nome GrupoCliente, 
