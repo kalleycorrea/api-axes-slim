@@ -193,7 +193,6 @@ $app->post('/addusuarioequipe', UsuarioController::class . ':addUsuarioEquipe')-
 $app->post('/deleteusuarioequipe', UsuarioController::class . ':deleteUsuarioEquipe')->add($mwAuthPost);
 $app->post('/updatelocation', UsuarioController::class . ':updateLocation')->add($mwAuthPost);
 
-$app->patch('/usuariolocalizacao', UsuarioController::class . ':updateLocalizacao');
 // =========================================
 
 // Catch-all route to serve a 404 Not Found page if none of the routes match

@@ -4,7 +4,6 @@ namespace App\DAO\MySQL\isupergaus;
 
 use App\Models\MySQL\isupergaus\UsuarioModel;
 
-
 class UsuariosDAO extends Conexao
 {
     public function __construct()
@@ -17,9 +16,8 @@ class UsuariosDAO extends Conexao
         $urlImgUserRbx = getenv('URL_IMG_USER_RBX');
 
         $statement = $this->pdoRbx
-            ->prepare("SELECT usuario, Terminal senha, Nome, idgrupo, 
-            if(master='S','G',if(perfil=19,'A','T')) as tipo, '' as equipe, 
-            MobileDeviceId, Latitude, Longitude, MobileLastDataReceived 
+            ->prepare("SELECT usuario, Terminal senha, Nome, idgrupo, '' as equipe, '' as nomeequipe, MobileDeviceId, 
+            if(master='S','G',if(perfil=19,'A','T')) as tipo 
             FROM usuarios 
             WHERE usuario = :usuario AND Terminal = :senha AND situacao = 'A' ;");
         // concat('".$urlImgUserRbx."',if(ifnull(Foto,'')='','contact_default.png',Foto)) as Foto 
@@ -32,7 +30,10 @@ class UsuariosDAO extends Conexao
         if (!empty($usuario)){
             for ($i=0; $i < count($usuario); $i++) {
                 $equipe = $this->getEquipeByUsuario($usuario[$i]['usuario']);
-                $usuario[$i]['equipe'] = $equipe;
+                if (!empty($equipe)) {
+                    $usuario[$i]['equipe'] = $equipe[0]['equipe'];
+                    $usuario[$i]['nomeequipe'] = $equipe[0]['nome'];
+                }
             }
         }
         return $usuario;
@@ -82,7 +83,7 @@ class UsuariosDAO extends Conexao
         $result = FALSE;
 
         if (!empty($data['equipe'])) {
-            $usuarios = $this->getUsuariosByEquipe($data['equipe']);
+            $usuarios = $this->getUsuariosByEquipe($data['equipe'], \PDO::FETCH_ASSOC);
             if (!empty($usuarios)) {
                 for ($i=0; $i < count($usuarios); $i++) {
                     $statement = $this->pdoRbx
@@ -111,94 +112,29 @@ class UsuariosDAO extends Conexao
 
     private function getEquipeByUsuario($usuario)
     {
-        $statement = $this->pdoAxes->prepare("select equipe from usuarios where usuario='".$usuario."'");
+        $statement = $this->pdoAxes->prepare("select u.equipe, e.nome from usuarios u left join equipes e 
+        on u.equipe = e.id where usuario='".$usuario."'");
         $statement->execute();
         $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
-        if (!empty($result)) {
-            return $result[0]['equipe'];
-        }
-        return '';
+        return $result;
+        // if (!empty($result)) {
+        //     return $result[0]['equipe'];
+        // }
+        // return '';
     }
 
-    private function getUsuariosByEquipe($equipe): array
+    private function getUsuariosByEquipe($equipe, $fetchStyle): array
     {
         $statement = $this->pdoAxes->prepare("select usuario from usuarios where equipe = ".$equipe);
         $statement->execute();
-        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        // if ($fetchStyle == 'COLUMN'){
+        //     $result = $statement->fetchAll(\PDO::FETCH_COLUMN);
+        // }
+        // else {
+        //     $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        // }
+        $result = $statement->fetchAll($fetchStyle);
         return $result;
-    }
-
-    public function updateUsuario(UsuarioModel $usuario): bool
-    {
-        $result = FALSE;
-        $fields = $params = array();
-
-        if (!is_null($usuario->getMobileDevice())){
-            $fields[] = "MobileDevice = :mobileDevice";
-            $params = array_merge($params, array(':mobileDevice' => $usuario->getMobileDevice()));
-        }
-        if (!is_null($usuario->getMobileTrackingTrace())){
-            $fields[] = "MobileTrackingTrace = :mobileTrackingTrace";
-            $params = array_merge($params, array(':mobileTrackingTrace' => $usuario->getMobileTrackingTrace()));
-        }
-        if (!is_null($usuario->getMobileDeviceId())){
-            $fields[] = "MobileDeviceId = :mobileDeviceId";
-            $params = array_merge($params, array(':mobileDeviceId' => $usuario->getMobileDeviceId()));
-        }
-        if (!is_null($usuario->getLatitude())){
-            $fields[] = "Latitude = :latitude";
-            $params = array_merge($params, array(':latitude' => $usuario->getLatitude()));
-        }
-        if (!is_null($usuario->getLongitude())){
-            $fields[] = "Longitude = :longitude";
-            $params = array_merge($params, array(':longitude' => $usuario->getLongitude()));
-        }
-        if (!is_null($usuario->getMobileLastDataReceived())){
-            $fields[] = "MobileLastDataReceived = :mobileLastDataReceived";
-            $params = array_merge($params, array(':mobileLastDataReceived' => $usuario->getMobileLastDataReceived()));
-        }
-        if (!is_null($usuario->getMobileLastLogin())){
-            $fields[] = "MobileLastLogin = :mobileLastLogin";
-            $params = array_merge($params, array(':mobileLastLogin' => $usuario->getMobileLastLogin()));
-        }
-
-        $params = array_merge($params, array(':usuario' => $usuario->getUsuario()));
-
-        $query = "UPDATE usuarios SET ";
-        if (!empty($fields)) {
-            $query .=  implode(', ', $fields) . ' WHERE usuario = :usuario';
-        }
-
-        $statement = $this->pdoRbx->prepare($query);
-        $result = $statement->execute($params);
-
-        /*
-        $statement = $this->pdoRbx
-            ->prepare('UPDATE usuarios SET 
-                MobileDevice = :mobileDevice, 
-                MobileTrackingTrace = :mobileTrackingTrace, 
-                MobileDeviceId = :mobileDeviceId, 
-                Latitude = :latitude, 
-                Longitude = :longitude, 
-                MobileLastDataReceived = :mobileLastDataReceived, 
-                MobileLastLogin = :mobileLastLogin 
-                WHERE usuario = :usuario;');
-        $statement->execute([
-            'mobileDevice' => $usuario->getMobileDevice(),
-            'mobileTrackingTrace' => $usuario->getMobileTrackingTrace(),
-            'mobileDeviceId' => $usuario->getMobileDeviceId(),
-            'latitude' => $usuario->getLatitude(),
-            'longitude' => $usuario->getLongitude(),
-            'mobileLastDataReceived' => $usuario->getMobileLastDataReceived(),
-            'mobileLastLogin' => $usuario->getMobileLastLogin(),
-            'usuario' => $usuario->getUsuario() 
-        ]);
-        */
-        return $result;
-    }
-
-    private function setPassword(){
-
     }
 
     public function getGrupoUsuarios(): array
@@ -228,10 +164,31 @@ class UsuariosDAO extends Conexao
 
     public function getEquipes(): array
     {
-        $statement = $this->pdoAxes->prepare('select id, nome from equipes order by nome');
+        $statement = $this->pdoAxes->prepare("select id, nome, '' MapsLat, '' MapsLng from equipes order by nome");
         $statement->execute();
         $equipes = $statement->fetchAll(\PDO::FETCH_ASSOC);
+
+        if (!empty($equipes)){
+            for ($i=0; $i < count($equipes); $i++) {
+                $coordenadas = $this->getCoordenadasEquipe($equipes[$i]['id']);
+                if (!empty($coordenadas)) {
+                    $usuario[$i]['MapsLat'] = $coordenadas[0]['Latitude'];
+                    $usuario[$i]['MapsLng'] = $coordenadas[0]['Longitude'];
+                }
+            }
+        }
         return $equipes;
+    }
+
+    private function getCoordenadasEquipe($idEquipe) {
+        $usuarios = $this->getUsuariosByEquipe($idEquipe, \PDO::FETCH_COLUMN);
+        $strUsuarios = "'".implode("','",$usuarios)."'";
+        $strSQL = "select usuario, Latitude, Longitude, MobileLastDataReceived 
+            from isupergaus.usuarios where usuario in (".$strUsuarios.") order by MobileLastDataReceived desc limit 1";
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $result;
     }
 
     public function getUsuariosEquipe(): array
@@ -311,11 +268,6 @@ class UsuariosDAO extends Conexao
 
     public function getUsuariosSemEquipe(): array
     {
-
-        //$usuario = array_merge($usuario, array('setpassword' => 'N'));
-        //array_push($usuario, array('setpassword' => 'N'));
-        //$usuario += ['setpassword' => 'N'];
-
         // idgrupo: 1-Tecnologia da Informação; 4-Infraestrutura
         $strSQL = "select usuario as Nome from isupergaus.usuarios 
                     where situacao = 'A' and idgrupo in (1,4) order by usuario";

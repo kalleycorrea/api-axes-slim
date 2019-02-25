@@ -15,6 +15,9 @@ select * from isupergaus.MobileDeviceLog;
 
 select * from isupergaus.LogGeoMobile;
 
+select usuario, Latitude, Longitude, MobileLastDataReceived from isupergaus.usuarios 
+where usuario in ('antonio.giliard', 'escossio.farias', 'amandabonfim') order by MobileLastDataReceived desc limit 1;
+
 -- update isupergaus.usuarios set Latitude=NULL, MobileLastDataReceived=DEFAULT where usuario='kalley';
 -- SET SQL_SAFE_UPDATES = 0;
 -- update isupergaus.usuarios set Terminal='' where idgrupo = 4 and Terminal='9999';

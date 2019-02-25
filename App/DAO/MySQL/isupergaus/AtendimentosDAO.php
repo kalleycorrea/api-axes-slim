@@ -34,6 +34,8 @@ class AtendimentosDAO extends Conexao
         a.Usuario_BX, 
         a.Grupo_Designado,
         ug.Grupo DescGrupoDesignado,
+        '' equipe,
+        '' nomeequipe,
         ct.Situacao,
         case ct.Situacao 
                 when 'A' then 'Ativo' 
@@ -112,6 +114,17 @@ class AtendimentosDAO extends Conexao
         //$statement->bindParam(':grupo', $pGrupo, \PDO::PARAM_STR);
         $statement->execute();
         $atendimentos = $statement->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Set Equipe do Usuário Designado
+        if (!empty($atendimentos)){
+            for ($i=0; $i < count($atendimentos); $i++) {
+                $equipe = $this->getEquipeByUsuario($atendimentos[$i]['Usu_Designado']);
+                if (!empty($equipe)) {
+                    $usuario[$i]['equipe'] = $equipe[0]['equipe'];
+                    $usuario[$i]['nomeequipe'] = $equipe[0]['nome'];
+                }
+            }
+        }
         return $atendimentos;
     }
 
@@ -121,6 +134,15 @@ class AtendimentosDAO extends Conexao
             where u.equipe = (select equipe from usuarios where usuario='".$usuario."')");
         $statement->execute();
         $result = $statement->fetchAll(\PDO::FETCH_COLUMN);
+        return $result;
+    }
+
+    private function getEquipeByUsuario($usuario)
+    {
+        $statement = $this->pdoAxes->prepare("select u.equipe, e.nome from usuarios u left join equipes e 
+        on u.equipe = e.id where usuario='".$usuario."'");
+        $statement->execute();
+        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
         return $result;
     }
 
@@ -646,14 +668,14 @@ class AtendimentosDAO extends Conexao
 
             // Estatísticas Routerbox
             // Primeiro atualiza o último registro de estatística
-            $ultimaEstatistica = $this->getIdUltimaEstatistica($data['numAtendimento']);
+            $ultimaEstatistica = $this->getUltimaEstatistica($data['numAtendimento']);
             $idEstatistica = '';
             $dataInicio = '';
             if (!empty($ultimaEstatistica)) {
                 $idEstatistica = $ultimaEstatistica[0]['Id'];
                 $dataInicio = $ultimaEstatistica[0]['Inicio'];
             }
-            //$idEstatistica = $this->getIdUltimaEstatistica($data['numAtendimento']);
+            //$idEstatistica = $this->getUltimaEstatistica($data['numAtendimento']);
             if (!empty($idEstatistica)) {
                 $statement2 = $this->pdoRbx
                 ->prepare("UPDATE AtendimentoEstatistica 
@@ -759,14 +781,14 @@ class AtendimentosDAO extends Conexao
             
             // Estatísticas Routerbox
             // Atualiza o último registro de estatística
-            $ultimaEstatistica = $this->getIdUltimaEstatistica($data['numAtendimento']);
+            $ultimaEstatistica = $this->getUltimaEstatistica($data['numAtendimento']);
             $idEstatistica = '';
             $dataInicio = '';
             if (!empty($ultimaEstatistica)) {
                 $idEstatistica = $ultimaEstatistica[0]['Id'];
                 $dataInicio = $ultimaEstatistica[0]['Inicio'];
             }
-            //$idEstatistica = $this->getIdUltimaEstatistica($data['numAtendimento']);
+            //$idEstatistica = $this->getUltimaEstatistica($data['numAtendimento']);
             if (!empty($idEstatistica)) {
                 $statement2 = $this->pdoRbx
                 ->prepare("UPDATE AtendimentoEstatistica 
