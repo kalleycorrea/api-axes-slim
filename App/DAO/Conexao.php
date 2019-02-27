@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DAO\MySQL\isupergaus;
+namespace App\DAO;
 
 abstract class Conexao
 {

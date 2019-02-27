@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DAO\MySQL\isupergaus;
+namespace App\DAO;
 use phpseclib\Net\SSH2;
 use phpseclib\Net\SFTP;
 

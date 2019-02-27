@@ -3,12 +3,25 @@
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
-use function src\slimConfiguration;
+//use function src\slimConfiguration;
 use App\Controllers\LoginController;
 use App\Controllers\UsuarioController;
 use App\Controllers\AtendimentoController;
 
-$container = slimConfiguration();
+//$container = slimConfiguration();
+
+$configuration = [
+    'settings' => [
+        'displayErrorDetails' => getenv('DISPLAY_ERRORS_DETAILS'),
+        'addContentLengthHeader' => false,
+        // Monolog settings
+        //'logger' => [
+        //    'name' => 'API-Axes-Slim',
+        //    'path' => __DIR__ . '/logs/app.log',
+        //],
+    ],
+];
+$container = new \Slim\Container($configuration);
 
 // Serviço de Logging em Arquivo
 $container['logger'] = function($container) {

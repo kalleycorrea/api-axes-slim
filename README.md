@@ -173,3 +173,52 @@ PHP: upload de um arquivo de um servidor para outro servidor
 PHP com SSH
 	SSH2 PECL extension ou phpseclib (phpseclib foi o que funcionou, importando pelo composer)
 	https://stackoverflow.com/questions/14050231/php-function-ssh2-connect-is-not-working
+
+
+::Configuração do Servidor
+
+Como configurar Apache Virtual Hosts no Ubuntu 14.04 LTS
+https://www.digitalocean.com/community/tutorials/como-configurar-apache-virtual-hosts-no-ubuntu-14-04-lts-pt
+
+Apache vários hosts virtuais no mesmo ip (diferente do url)
+https://stackoverflow.com/questions/7660070/apache-multiple-virtual-hosts-on-the-same-same-ipdiffrent-urls
+
+Como Instalar PHP 7 no Ubuntu [via apt-get]
+https://gilbertoalbino.com/como-instalar-php-7-no-ubuntu-via-apt-get/
+
+sudo apt-get update
+sudo apt-get install curl php-cli php-mbstring git unzip
+
+How To Install and Use Composer on Ubuntu 14.04
+https://www.digitalocean.com/community/tutorials/how-to-install-and-use-composer-on-ubuntu-14-04
+
+git clone https://github.com/kalleycorrea/api-axes-slim.git
+composer install
+composer dumpautoload -o
+
+Apache configuration .htaccess
+	http://www.slimframework.com/docs/v3/start/web-servers.html
+	Apache e mod_rewrite
+	https://docs.slimframework.com/routing/rewrite/
+	https://stackoverflow.com/questions/44092907/slim-3-error-500-when-calling-routes-in-parallel
+	https://forum.imasters.com.br/topic/561769-configurar-rotas-slim-htaccess/
+	https://discourse.slimframework.com/t/routes-and-container-resolution/2453
+
+	https://stackoverflow.com/questions/44897594/last-require-in-index-php-only-work-for-routes
+	https://stackoverflow.com/questions/42174121/organize-routes-into-separate-files-not-working-properly-in-slim
+	https://github.com/slimphp/Slim/issues/1941
+
+
+
+${APACHE_LOG_DIR}
+By default, /var/log/apache2/error.log
+This can be configured in /etc/php5/apache2/php.ini
+
+How To Set Up mod_rewrite for Apache on Ubuntu 14.04
+https://www.digitalocean.com/community/tutorials/how-to-set-up-mod_rewrite-for-apache-on-ubuntu-14-04
+
+Erro:
+Uncaught exception 'RuntimeException' with message 'Unexpected data in output buffer. Maybe you have characters before an opening <?php tag?'
+	solução: https://stackoverflow.com/questions/37293280/unreasonable-errors-on-php-slim-3-middleware
+	added the attribute addContentLengthHeader with the value false in the settings array.
+	'addContentLengthHeader' => false,

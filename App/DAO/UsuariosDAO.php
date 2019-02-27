@@ -1,8 +1,6 @@
 <?php
 
-namespace App\DAO\MySQL\isupergaus;
-
-use App\Models\MySQL\isupergaus\UsuarioModel;
+namespace App\DAO;
 
 class UsuariosDAO extends Conexao
 {
