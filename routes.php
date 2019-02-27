@@ -26,7 +26,7 @@ $container = new \Slim\Container($configuration);
 // Serviço de Logging em Arquivo
 $container['logger'] = function($container) {
     $logger = new \Monolog\Logger('API-Axes-Slim');
-    $file_handler = new \Monolog\Handler\StreamHandler('logs/app.log');
+    $file_handler = new \Monolog\Handler\StreamHandler(__DIR__ .'/logs/app.log');
     $logger->pushHandler($file_handler);
     return $logger;
 };

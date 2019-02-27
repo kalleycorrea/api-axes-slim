@@ -180,11 +180,14 @@ PHP com SSH
 Como configurar Apache Virtual Hosts no Ubuntu 14.04 LTS
 https://www.digitalocean.com/community/tutorials/como-configurar-apache-virtual-hosts-no-ubuntu-14-04-lts-pt
 
-Apache vários hosts virtuais no mesmo ip (diferente do url)
+Apache vários hosts virtuais no mesmo ip e mudando somente o final da url, como se fossem diretórios
 https://stackoverflow.com/questions/7660070/apache-multiple-virtual-hosts-on-the-same-same-ipdiffrent-urls
 
 Como Instalar PHP 7 no Ubuntu [via apt-get]
 https://gilbertoalbino.com/como-instalar-php-7-no-ubuntu-via-apt-get/
+https://www.digitalocean.com/community/tutorials/how-to-upgrade-to-php-7-on-ubuntu-14-04
+https://askubuntu.com/questions/716661/how-do-i-remove-php-7-completely
+	sudo apt-get purge php7.*
 
 sudo apt-get update
 sudo apt-get install curl php-cli php-mbstring git unzip
@@ -192,6 +195,7 @@ sudo apt-get install curl php-cli php-mbstring git unzip
 How To Install and Use Composer on Ubuntu 14.04
 https://www.digitalocean.com/community/tutorials/how-to-install-and-use-composer-on-ubuntu-14-04
 
+sudo apt-get install git
 git clone https://github.com/kalleycorrea/api-axes-slim.git
 composer install
 composer dumpautoload -o
@@ -209,16 +213,17 @@ Apache configuration .htaccess
 	https://github.com/slimphp/Slim/issues/1941
 
 
-
 ${APACHE_LOG_DIR}
 By default, /var/log/apache2/error.log
 This can be configured in /etc/php5/apache2/php.ini
 
 How To Set Up mod_rewrite for Apache on Ubuntu 14.04
 https://www.digitalocean.com/community/tutorials/how-to-set-up-mod_rewrite-for-apache-on-ubuntu-14-04
+sudo chmod -R 644 /var/www/html/api-axes-slim/.htaccess
 
 Erro:
 Uncaught exception 'RuntimeException' with message 'Unexpected data in output buffer. Maybe you have characters before an opening <?php tag?'
 	solução: https://stackoverflow.com/questions/37293280/unreasonable-errors-on-php-slim-3-middleware
 	added the attribute addContentLengthHeader with the value false in the settings array.
-	'addContentLengthHeader' => false,
+
+sudo chmod 777 /var/www/html/api-axes-slim/logs/app.log

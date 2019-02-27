@@ -6,5 +6,5 @@
 //conforme a configuração autoload do arquivo composer.json 
 
 require_once './vendor/autoload.php';
-require_once './env.php';
+require_once './.env.php';
 require_once './routes.php';
