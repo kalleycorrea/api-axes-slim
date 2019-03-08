@@ -36,7 +36,7 @@ class AtendimentosDAO extends Conexao
         ug.Grupo DescGrupoDesignado,
         '' as equipe,
         '' as nomeequipe,
-        ct.Situacao,
+        ct.Situacao as SituacaoCliente,
         case ct.Situacao 
                 when 'A' then 'Ativo' 
                 when 'B' then 'Bloqueado' 
@@ -44,7 +44,7 @@ class AtendimentosDAO extends Conexao
                 when 'E' then 'Aguard. Instalacao' 
                 when 'I' then 'Em Instalacao' 
                 when 'S' then 'Suspenso'
-                else 'Inativo' END as DescSituacao, 
+                else 'Inativo' END as DescSituacaoCliente, 
         ifnull(a.SituacaoOS,' ') SituacaoOS, 
         case ifnull(a.SituacaoOS,' ') 
                 when ' ' then 'Não Criada'
@@ -55,11 +55,12 @@ class AtendimentosDAO extends Conexao
                 when 'F' then 'Na Fila' 
                 when 'P' then 'Pausada'
                 else ' ' END as DescSituacaoOS, 
+        a.Situacao as SituacaoAtendimento,
         case a.Situacao 
                 when 'A' then 'Em Andamento' 
                 when 'E' then 'Em Espera' 
                 when 'F' then 'Encerrado' 
-                else 'Não Informada' END as DescSituacaoAtendimento, 
+                else 'Situação Não Informada' END as DescSituacaoAtendimento, 
         '' as MTBFObrigatorio 
         FROM isupergaus.Atendimentos a 
         left join isupergaus.Clientes c on a.Cliente = c.Codigo 
@@ -74,7 +75,7 @@ class AtendimentosDAO extends Conexao
         
         $where = '';
         if (empty($pFiltroBusca)) {
-            $where = "a.Situacao IN ('A','E') and ";
+            $where = "a.Situacao IN ('A','E','') and ";
             //Atendimentos visualizados pelo Gestor (todos os atendimentos do grupo e dos usuários do grupo)
             if ($pTipo == 'G') {
                 $where = $where . "(a.Usu_Designado in (select u2.usuario from isupergaus.usuarios u2 where u2.idgrupo = ".$pGrupo.") or a.Grupo_Designado = ".$pGrupo.")";
@@ -272,9 +273,9 @@ class AtendimentosDAO extends Conexao
 
     public function getDadosAdicionais(): array
     {
-        $strSQL = "select a.Codigo CodigoCampo, a.Nome, a.TipoDado, a.Lista, a.Tabela, 
+        $strSQL = "select a.Codigo CodigoCampo, a.Nome, a.TipoDado, a.Lista, a.Tabela, a.Obrigatorio, 
         '' Valor, '' Id 
-        -- a.ListaDesc, a.Tamanho, a.Obrigatorio, a.Ajuda 
+        -- a.ListaDesc, a.Tamanho, a.Ajuda 
         from isupergaus.CamposComplementares a 
         where a.Tabela = 'Contratos' and a.Codigo < 45 order by a.Codigo";
 
@@ -653,6 +654,27 @@ class AtendimentosDAO extends Conexao
             'checklist' => $data['strChecklist'],
             'numero' => $data['numAtendimento'] 
         ]);
+
+        // MTBF
+        if ($data['mtbfObrigatorio'] == 'S'){
+            if (empty($data['idMTBF'])){
+                $statement2 = $this->pdoRbx
+                ->prepare("INSERT INTO CamposComplementaresValores (Complemento,Tabela,Chave,Valor) 
+                            VALUES (38, 'Atendimentos', :chave, :valor)");
+                $result2 = $statement2->execute([
+                    'chave' => $data['numAtendimento'],
+                    'valor' => $data['valorMTBF']
+                    ]);
+            }
+            else {
+                $statement2 = $this->pdoRbx
+                ->prepare('UPDATE CamposComplementaresValores SET Valor = :valor WHERE id = :id');
+                $result2 = $statement2->execute([
+                    'id' => $data['idMTBF'],
+                    'valor' => $data['valorMTBF'] 
+                ]);
+            }
+        }
 
         // Adiciona Ocorrência
         if ($result == TRUE) {

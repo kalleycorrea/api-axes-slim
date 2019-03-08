@@ -74,7 +74,7 @@ a.Grupo_Designado,
 ug.Grupo DescGrupoDesignado,
 '' as equipe,
 '' as nomeequipe,
-ct.Situacao,
+ct.Situacao as SituacaoCliente,
 case ct.Situacao 
 		when 'A' then 'Ativo' 
 		when 'B' then 'Bloqueado' 
@@ -82,7 +82,7 @@ case ct.Situacao
 		when 'E' then 'Aguard. Instalacao' 
 		when 'I' then 'Em Instalacao' 
 		when 'S' then 'Suspenso'
-		else 'Inativo' END as DescSituacao,
+		else 'Inativo' END as DescSituacaoCliente,
 ifnull(a.SituacaoOS,' ') SituacaoOS, 
 case ifnull(a.SituacaoOS,' ') 
 		when ' ' then 'Não Criada'
@@ -97,7 +97,7 @@ case a.Situacao
 		when 'A' then 'Em Andamento' 
 		when 'E' then 'Em Espera' 
 		when 'F' then 'Encerrado' 
-		else 'Não Informada' END as DescSituacaoAtendimento, 
+		else 'Situação Não Informada' END as DescSituacaoAtendimento, 
 '' as MTBFObrigatorio 
 FROM isupergaus.Atendimentos a 
 left join isupergaus.Clientes c on a.Cliente = c.Codigo 
@@ -108,7 +108,8 @@ left join isupergaus.ContratosEndereco e on ct.Numero = e.Contrato and e.Tipo = 
 left join isupergaus.usuarios u on a.Usu_Designado = u.usuario 
 left join isupergaus.UsuariosGrupoSetor ug on a.Grupo_Designado = ug.id 
 left join isupergaus.AtendTopicos t on a.Topico = t.Codigo 
-WHERE a.Situacao = 'A' -- and a.Topico in (36, 46, 47, 112, 113, 155) 
+WHERE a.Numero = 107415 
+-- a.Situacao = 'A' -- and a.Topico in (36, 46, 47, 112, 113, 155) 
 -- c.Nome like '%Rita de Cássia%'
  -- visualização técnico
 -- and (a.Usu_Designado = 'amandabonfim' or a.Grupo_Designado = 4) 
@@ -119,7 +120,6 @@ WHERE a.Situacao = 'A' -- and a.Topico in (36, 46, 47, 112, 113, 155)
 							where (u1.idgrupo = 4 and u1.perfil in (7,19)) or (u1.idgrupo = 4 and u1.master = 'S') or (u1.usuario='kalley')) 
     or a.Grupo_Designado = 4
     )*/
-and a.Numero = 100903 
 order by a.Prioridade, date_format(concat(a.Data_AB," ",a.Hora_AB), "%d/%m/%Y %H:%i:%s");
 
 
@@ -150,7 +150,7 @@ select descricao, count(*) from isupergaus.AtendUltAlteracao where modo='M' and 
 select Id, Atendimento, Usuario, Data, Descricao, Modo from isupergaus.AtendUltAlteracao where Atendimento = 94982;
 -- delete from isupergaus.AtendUltAlteracao where 
 	-- id in (698515,698514);
-	-- Atendimento=100903 and Descricao='Exclusão de anexo';
+	-- Atendimento=107415 and Descricao='Novos itens de checklist marcados: Verificar Pontência do Sinal; Verificar Alcance do Wifi';
 
 -- DADOS TÉCNICOS (Dados Adicionais)
 -- CHAVE = Numero Contrato 
@@ -166,7 +166,7 @@ and a.Contrato in (select distinct c.Chave Contrato from isupergaus.CamposComple
 					where c.Tabela = 'Contratos' and c.Complemento < 45 
 				  );
 
-select a.Codigo CodigoCampo, a.Nome, a.TipoDado, a.Lista, a.ListaDesc, a.Tabela, a.Tamanho, a.Obrigatorio, a.Ajuda, '' Valor 
+select a.Codigo CodigoCampo, a.Nome, a.TipoDado, a.Lista, a.ListaDesc, a.Tabela, a.Obrigatorio, a.Tamanho, a.Ajuda, '' Valor 
 from isupergaus.CamposComplementares a where a.Tabela = 'Contratos' and a.Codigo < 45 order by a.Codigo;
 
 select a.Codigo CodigoCampo, a.Nome, d.Numero NumAtendimento, b.Id, b.Chave Contrato, b.Valor, 
@@ -227,7 +227,9 @@ select * from isupergaus.CamposComplementaresValores c where c.Complemento in (5
 -- delete from isupergaus.CamposComplementaresValores where Tabela = 'Atendimentos' and chave = 100903;
 
 -- CHECK LIST | DESIGNAÇÃO | ENCERRAMENTO
-SELECT * FROM isupergaus.AtendimentoChecklist ck where ck.Atendimento=100903;
+SELECT * FROM isupergaus.AtendimentoChecklist ck where ck.Atendimento=107415;
+select * from AtendTopicoChecklist;
+-- delete from AtendimentoChecklist where Descricao = 'Todos Equipamentos Presentes' or Descricao = 'Equipamentos Testados';
 
 -- CheckList marcados
 SELECT a.Checklist, a.Grupo_Designado, a.Usu_Designado, a.Causa, a.Solucao, a.Usuario_BX, a.Data_BX, a.Situacao 
@@ -256,7 +258,8 @@ SELECT Data_AB, Hora_AB, Data_BX, Hora_BX FROM isupergaus.Atendimentos a where a
 -- MTBF
 select * from isupergaus.CamposComplementares c where c.Tabela = 'Atendimentos' and Codigo=38;
 select * from isupergaus.CamposComplementaresValores c 
-where c.Tabela = 'Atendimentos' and c.Complemento = 38 and Chave in (107281, 107030); -- and Valor = 'S'
+where c.Tabela = 'Atendimentos' and c.Complemento = 38 and Chave in (107415,107281, 107030); -- and Valor = 'S'
+-- delete from CamposComplementaresValores where id in (40736,40737);
 
 select * from isupergaus.Atendimentos a 
 left join isupergaus.CamposComplementaresValores c on a.Numero = c.Chave and c.Tabela = 'Atendimentos' 
