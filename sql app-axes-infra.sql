@@ -71,6 +71,9 @@ a.Usu_Abertura,
 a.Usu_Designado,
 a.Usuario_BX,
 a.Grupo_Designado,
+ug.Grupo DescGrupoDesignado,
+'' as equipe,
+'' as nomeequipe,
 ct.Situacao,
 case ct.Situacao 
 		when 'A' then 'Ativo' 
@@ -89,7 +92,13 @@ case ifnull(a.SituacaoOS,' ')
 		when 'E' then 'Em Execução' 
 		when 'F' then 'Na Fila' 
 		when 'P' then 'Pausada'
-		else ' ' END as DescSituacaoOS 
+		else ' ' END as DescSituacaoOS,
+case a.Situacao 
+		when 'A' then 'Em Andamento' 
+		when 'E' then 'Em Espera' 
+		when 'F' then 'Encerrado' 
+		else 'Não Informada' END as DescSituacaoAtendimento, 
+'' as MTBFObrigatorio 
 FROM isupergaus.Atendimentos a 
 left join isupergaus.Clientes c on a.Cliente = c.Codigo 
 left join isupergaus.ClienteGrupo g on c.Grupo = g.Codigo 
@@ -146,7 +155,7 @@ select Id, Atendimento, Usuario, Data, Descricao, Modo from isupergaus.AtendUltA
 -- DADOS TÉCNICOS (Dados Adicionais)
 -- CHAVE = Numero Contrato 
 -- COMPLEMENTO = Código do Campo Adicional
-select * from isupergaus.CamposComplementares c where c.Tabela = 'Contratos'; -- MTBF -> c.Complemento=38 Tabela=Atendimentos
+select * from isupergaus.CamposComplementares c where c.Tabela = 'Contratos';
 select * from isupergaus.CamposComplementaresValores c 
 where c.Tabela = 'Contratos' and c.Complemento < 45 and Chave = 19623;
 
@@ -243,6 +252,15 @@ SELECT * FROM isupergaus.Atendimentos a where a.Situacao <> 'A' order by numero 
 SELECT Data_AB, Hora_AB, Data_BX, Hora_BX FROM isupergaus.Atendimentos a where a.Numero=104186;
 -- date_format(concat(a.Data_BX," ",a.Hora_BX), "%d/%m/%Y %H:%i") Fechamento,
 -- 2019-02-05 09:31:30
+
+-- MTBF
+select * from isupergaus.CamposComplementares c where c.Tabela = 'Atendimentos' and Codigo=38;
+select * from isupergaus.CamposComplementaresValores c 
+where c.Tabela = 'Atendimentos' and c.Complemento = 38 and Chave in (107281, 107030); -- and Valor = 'S'
+
+select * from isupergaus.Atendimentos a 
+left join isupergaus.CamposComplementaresValores c on a.Numero = c.Chave and c.Tabela = 'Atendimentos' 
+where a.Topico in (120,95,27,6,41,10,11,12,13,94,119,35,36,38,45,46,18,19) and c.Complemento = 38;
 
 -- ESTATÍSTICA
 SELECT * FROM isupergaus.AtendimentoEstatistica es where es.Atendimento=105716; -- 100903 100905 104186 100905 100903 100776;

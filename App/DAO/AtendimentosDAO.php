@@ -34,8 +34,8 @@ class AtendimentosDAO extends Conexao
         a.Usuario_BX, 
         a.Grupo_Designado,
         ug.Grupo DescGrupoDesignado,
-        '' equipe,
-        '' nomeequipe,
+        '' as equipe,
+        '' as nomeequipe,
         ct.Situacao,
         case ct.Situacao 
                 when 'A' then 'Ativo' 
@@ -54,7 +54,13 @@ class AtendimentosDAO extends Conexao
                 when 'E' then 'Em Execução' 
                 when 'F' then 'Na Fila' 
                 when 'P' then 'Pausada'
-                else ' ' END as DescSituacaoOS 
+                else ' ' END as DescSituacaoOS, 
+        case a.Situacao 
+                when 'A' then 'Em Andamento' 
+                when 'E' then 'Em Espera' 
+                when 'F' then 'Encerrado' 
+                else 'Não Informada' END as DescSituacaoAtendimento, 
+        '' as MTBFObrigatorio 
         FROM isupergaus.Atendimentos a 
         left join isupergaus.Clientes c on a.Cliente = c.Codigo 
         left join isupergaus.ClienteGrupo g on c.Grupo = g.Codigo 
@@ -101,6 +107,10 @@ class AtendimentosDAO extends Conexao
                         // Nome Usuário
                         $where="a.Usu_Designado like '".substr($pFiltroBusca, 1)."%' OR a.Usuario_BX like '".substr($pFiltroBusca, 1)."%'";
                         break;
+                    case '*':
+                        // Não Designado
+                        $where="a.Usu_Designado = '' OR a.Grupo_Designado <> 0";
+                        break;
                     default:
                         return [];
                 }
@@ -115,14 +125,16 @@ class AtendimentosDAO extends Conexao
         $statement->execute();
         $atendimentos = $statement->fetchAll(\PDO::FETCH_ASSOC);
 
-        // Set Equipe do Usuário Designado
+        // Set Equipe do Usuário Designado e MTBF
         if (!empty($atendimentos)){
             for ($i=0; $i < count($atendimentos); $i++) {
                 $equipe = $this->getEquipeByUsuario($atendimentos[$i]['Usu_Designado']);
                 if (!empty($equipe)) {
-                    $usuario[$i]['equipe'] = $equipe[0]['equipe'];
-                    $usuario[$i]['nomeequipe'] = $equipe[0]['nome'];
+                    $atendimentos[$i]['equipe'] = $equipe[0]['equipe'];
+                    $atendimentos[$i]['nomeequipe'] = $equipe[0]['nome'];
                 }
+                // MTBF
+                $atendimentos[$i]['MTBFObrigatorio'] = $this->getObrigatoriedadeMTBF($atendimentos[$i]['Topico']);
             }
         }
         return $atendimentos;
@@ -143,6 +155,22 @@ class AtendimentosDAO extends Conexao
         on u.equipe = e.id where usuario='".$usuario."'");
         $statement->execute();
         $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $result;
+    }
+
+    private function getObrigatoriedadeMTBF($topico)
+    {
+        $result = 'N';
+        $statement = $this->pdoRbx->prepare("select Filtro from CamposComplementares 
+        where Tabela='Atendimentos' and Codigo=38");
+        $statement->execute();
+        $topicos = $statement->fetchAll(\PDO::FETCH_COLUMN);
+        if (!empty($topicos)) {
+            $arrayTopicos = explode(",", $topicos[0]);
+            if (in_array($topico, $arrayTopicos)){
+                $result = 'S';
+            }
+        }
         return $result;
     }
 
@@ -587,6 +615,17 @@ class AtendimentosDAO extends Conexao
         $strSQL = "select c.Id, c.Descricao, a.Checklist Marcados, 'false' Checked 
         from AtendimentoChecklist c left join Atendimentos a on c.Atendimento = a.Numero 
         where c.Atendimento = ".$pNumAtendimento." order by c.Id";
+
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $checklist = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $checklist;
+    }
+
+    public function getMTBF($pNumAtendimento): array
+    {
+        $strSQL = "select id, Valor from CamposComplementaresValores 
+            where Tabela = 'Atendimentos' and Complemento = 38 and Chave = ".$pNumAtendimento;
 
         $statement = $this->pdoRbx->prepare($strSQL);
         $statement->execute();
