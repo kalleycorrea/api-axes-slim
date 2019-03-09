@@ -181,6 +181,7 @@ $app->post('/', function($request, $response, $args){
 $app->post('/loginappaxesos', LoginController::class . ':loginAppAxesOS')->add($mwAuthPost);
 $app->post('/getatendimentos', AtendimentoController::class . ':getAtendimentos')->add($mwAuthPost);
 $app->post('/updatesituacaoos', AtendimentoController::class . ':updateSituacaoOS')->add($mwAuthPost);
+$app->post('/updatesituacaoatendimento', AtendimentoController::class . ':updateSituacaoAtendimento')->add($mwAuthPost);
 $app->post('/getocorrencias', AtendimentoController::class . ':getOcorrencias')->add($mwAuthPost);
 $app->post('/addocorrencia', AtendimentoController::class . ':addOcorrencia')->add($mwAuthPost);
 $app->post('/getdadosadicionais', AtendimentoController::class . ':getDadosAdicionais')->add($mwAuthPost);

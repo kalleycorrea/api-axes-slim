@@ -56,6 +56,26 @@ final class AtendimentoController
         return $response;
     }
 
+    public function updateSituacaoAtendimento(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $atendimentosDAO = new AtendimentosDAO();
+        $result = $atendimentosDAO->updateSituacaoAtendimento($data);
+
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => "Situação do atendimento atualizada"
+            ], 200);
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                'message' => "Situação do atendimento NÃO atualizada"
+            ], 200);
+        }
+        return $response;
+    }
+
     public function getOcorrencias(Request $request, Response $response, array $args): Response
     {
         $data = $request->getParsedBody();

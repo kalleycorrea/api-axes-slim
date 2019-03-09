@@ -243,6 +243,21 @@ class AtendimentosDAO extends Conexao
         return $result;
     }
 
+    public function updateSituacaoAtendimento($data): bool
+    {
+        $result = FALSE;
+
+        $statement = $this->pdoRbx
+            ->prepare('UPDATE Atendimentos SET 
+                Situacao = :situacao 
+                WHERE Numero = :numAtendimento;');
+        $result = $statement->execute([
+            'situacao' => $data['situacao'],
+            'numAtendimento' => $data['numAtendimento'] 
+            ]);
+        return $result;
+    }
+
     public function getOcorrencias($pNumAtendimento): array
     {
         $strSQL = "select Usuario, Modo, Descricao, 
