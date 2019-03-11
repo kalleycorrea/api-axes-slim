@@ -729,7 +729,8 @@ class AtendimentosDAO extends Conexao
             // Adiciona Ocorrência
             $descricao = '';
             if (empty($data['usuarioDesignado'])) {
-                $descricao = "Atendimento designado de <b>".$data['UltimoUsuarioDesignado']."</b> para <b>".$data['grupoDesignado']."</b><BR>";
+                $descGrupoDesignado = $this->getDescricaoGrupo($data['grupoDesignado']);
+                $descricao = "Atendimento designado de <b>".$data['UltimoUsuarioDesignado']."</b> para <b>".$descGrupoDesignado."</b><BR>";
             } else {
                 $descricao = "Atendimento designado de <b>".$data['UltimoUsuarioDesignado']."</b> para <b>".$data['usuarioDesignado']."</b><BR>";
             }
@@ -907,6 +908,19 @@ class AtendimentosDAO extends Conexao
             }
         }
         return $result;
+    }
+
+    private function getDescricaoGrupo($idGrupo): string
+    {
+        $desc = '';
+        $strSQL = "SELECT Grupo FROM UsuariosGrupoSetor WHERE id = ".$idGrupo;
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        if (isset($result[0]['Grupo']) && !empty($result[0]['Grupo'])) {
+            $desc = $result[0]['Grupo'];
+        }
+        return $desc;
     }
 
     private function getUltimaEstatistica($pNumAtendimento): array
