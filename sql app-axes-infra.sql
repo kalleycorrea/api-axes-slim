@@ -47,11 +47,12 @@ Situação OS
     B: Abortada
 */
 
-SELECT a.Numero NumAtendimento, a.Protocolo, c.Codigo CodCliente, c.Nome Cliente, c.Sigla Apelido, a.Tipo, 
+SELECT a.Numero NumAtendimento, a.Protocolo, c.Codigo CodCliente, c.Nome Cliente, c.Sigla Apelido, c.Tipo TipoPessoa, a.Tipo, 
 c.TelCelular, c.TelComercial, c.TelResidencial, a.Contrato, p.DescricaoComercial Plano, p.Descricao Plano2, 
 t.Descricao DescTopico, a.Topico, a.Prioridade, a.Assunto, a.Solucao, a.Causa, 
 date_format(concat(a.Data_AB," ",a.Hora_AB), "%d/%m/%Y %H:%i") Abertura,
 date_format(concat(a.Data_BX," ",a.Hora_BX), "%d/%m/%Y %H:%i") Fechamento,
+date_format(concat(a.Data_Prox," ",a.Hora_Prox), "%d/%m/%Y %H:%i") Agendamento,
 replace(isupergaus.rbx_sla(a.Numero, 'N'),'?','ú') SLA,  
 if (a.SLATipo = 'C', 'Corridos', if (a.SLATipo = 'U', 'Úteis', '')) as SLATipo, 
 if (a.SLA > 0, SEC_TO_TIME(a.SLA*60), 0) DuracaoSLA_HHMMSS,
@@ -108,7 +109,8 @@ left join isupergaus.ContratosEndereco e on ct.Numero = e.Contrato and e.Tipo = 
 left join isupergaus.usuarios u on a.Usu_Designado = u.usuario 
 left join isupergaus.UsuariosGrupoSetor ug on a.Grupo_Designado = ug.id 
 left join isupergaus.AtendTopicos t on a.Topico = t.Codigo 
-WHERE a.Numero = 107415 
+WHERE a.Data_Prox is not null 
+-- a.Numero = 107415 
 -- a.Situacao = 'A' -- and a.Topico in (36, 46, 47, 112, 113, 155) 
 -- c.Nome like '%Rita de Cássia%'
  -- visualização técnico
@@ -122,6 +124,7 @@ WHERE a.Numero = 107415
     )*/
 order by a.Prioridade, date_format(concat(a.Data_AB," ",a.Hora_AB), "%d/%m/%Y %H:%i:%s");
 
+update Atendimentos set situacao = '', Usuario_BX='', Data_BX = default, Hora_BX = default, Solucao = '' where numero=107415;
 
 -- SLA
 select CONVERT(isupergaus.rbx_sla(96833, 'N') USING utf8) SLA;

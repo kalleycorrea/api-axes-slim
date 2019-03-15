@@ -14,9 +14,10 @@ class AtendimentosDAO extends Conexao
     public function getAtendimentos($pUsuario, $pTipo, $pGrupo, $pFiltroBusca): array
     {
         $strSQL = "SELECT a.Numero NumAtendimento, a.Protocolo, c.Codigo CodCliente, 
-        c.Nome Cliente, c.Sigla Apelido, a.Tipo, c.TelCelular, c.TelComercial, c.TelResidencial, a.Contrato, 
+        c.Nome Cliente, c.Sigla Apelido, c.Tipo TipoPessoa, a.Tipo, c.TelCelular, c.TelComercial, c.TelResidencial, a.Contrato, 
         p.DescricaoComercial Plano, t.Descricao DescTopico, a.Topico, a.Prioridade, a.Assunto, a.Solucao, 
         date_format(concat(a.Data_AB,' ',a.Hora_AB), '%d/%m/%Y %H:%i') Abertura,
+        date_format(concat(a.Data_Prox,' ',a.Hora_Prox), '%d/%m/%Y %H:%i') Agendamento,
         replace(isupergaus.rbx_sla(a.Numero, 'N'),'?','ú') SLA, 
         g.Nome GrupoCliente, 
         if (e.Endereco is null, 'N', 'S') as PossuiEnderecoInstalacao, 
@@ -102,15 +103,23 @@ class AtendimentosDAO extends Conexao
                         break;
                     case '#':
                         // Tópico
-                        $where="t.Descricao like '%".substr($pFiltroBusca, 1)."%' AND a.Situacao IN ('A','E')";
+                        $where="a.Situacao IN ('A','E','') AND t.Descricao like '%".substr($pFiltroBusca, 1)."%'";
                         break;
                     case '$':
-                        // Nome Usuário
-                        $where="a.Usu_Designado like '".substr($pFiltroBusca, 1)."%' OR a.Usuario_BX like '".substr($pFiltroBusca, 1)."%'";
+                        // Nome Usuário (Atendimentos Abertos)
+                        $where="a.Situacao IN ('A','E','') AND (a.Usu_Designado like '".substr($pFiltroBusca, 1)."%' OR a.Usuario_BX like '".substr($pFiltroBusca, 1)."%')";
+                        break;
+                    case '%':
+                        // Nome Usuário (Atendimentos Encerrados)
+                        $where="a.Situacao = 'F' AND (a.Usu_Designado like '".substr($pFiltroBusca, 1)."%' OR a.Usuario_BX like '".substr($pFiltroBusca, 1)."%')";
                         break;
                     case '*':
-                        // Não Designado
-                        $where="a.Usu_Designado = '' OR a.Grupo_Designado <> 0";
+                        // Não Designado ou Designado somente para o grupo
+                        $where="a.Situacao IN ('A','E','') AND a.Usu_Designado = ''";
+                        break;
+                    case '?':
+                        // Situação Não Informada
+                        $where="a.Situacao = ''";
                         break;
                     default:
                         return [];
@@ -255,6 +264,109 @@ class AtendimentosDAO extends Conexao
             'situacao' => $data['situacao'],
             'numAtendimento' => $data['numAtendimento'] 
             ]);
+        return $result;
+    }
+
+    public function capturarAtendimento($data): bool
+    {
+        $result = FALSE;
+        $strSQL = '';
+        if (empty($data['usuarioDesignado'])) {
+            $strSQL = "UPDATE Atendimentos SET Grupo_Designado = ".$data['grupoDesignado'].", Usu_Designado='' 
+            WHERE Numero = ".$data['numAtendimento'];
+        } else {
+            $strSQL = "UPDATE Atendimentos SET Usu_Designado = '".$data['usuarioDesignado']."', Grupo_Designado=0 
+            WHERE Numero = ".$data['numAtendimento'];
+        }
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $result = $statement->execute();
+
+        if ($result == TRUE) {
+            // Adiciona Ocorrência
+            $descricao = '';
+            if (empty($data['usuarioDesignado'])) {
+                $descGrupoDesignado = $this->getDescricaoGrupo($data['grupoDesignado']);
+                $descricao = "Atendimento designado de <b>".$data['UltimoUsuarioDesignado']."</b> para <b>".$descGrupoDesignado."</b><BR>";
+            } else {
+                $descricao = "Atendimento designado de <b>".$data['UltimoUsuarioDesignado']."</b> para <b>".$data['usuarioDesignado']."</b><BR>";
+            }
+            $statement2 = $this->pdoRbx
+            ->prepare("INSERT INTO AtendUltAlteracao (Atendimento, Usuario, Descricao, Data, Modo) 
+                        VALUES (:atendimento, :usuario, :descricao, now(), 'A')");
+            $result2 = $statement2->execute([
+                'atendimento' => $data['numAtendimento'],
+                'usuario' => $data['usuario'],
+                'descricao' => $descricao
+                ]);
+
+            // Estatísticas Routerbox
+            // Primeiro atualiza o último registro de estatística
+            $ultimaEstatistica = $this->getUltimaEstatistica($data['numAtendimento']);
+            $idEstatistica = '';
+            $dataInicio = '';
+            if (!empty($ultimaEstatistica)) {
+                $idEstatistica = $ultimaEstatistica[0]['Id'];
+                $dataInicio = $ultimaEstatistica[0]['Inicio'];
+            }
+            //$idEstatistica = $this->getUltimaEstatistica($data['numAtendimento']);
+            if (!empty($idEstatistica)) {
+                $statement2 = $this->pdoRbx
+                ->prepare("UPDATE AtendimentoEstatistica 
+                            SET Fim = now(), 
+                                Duracao = TIME_TO_SEC(TIMEDIFF(now(), Inicio)), 
+                                UsuarioFim = :usuariofim 
+                            WHERE Id = :id");
+                $result2 = $statement2->execute([
+                    'usuariofim' => $data['UltimoUsuarioDesignado'],
+                    'id' => $idEstatistica
+                ]);
+            }
+            // Em seguida cria um novo registro
+            $grupo = 0;
+            if (empty($data['usuarioDesignado'])) {
+                $grupo = $data['grupoDesignado'];
+            }
+            $statement2 = $this->pdoRbx
+            ->prepare("INSERT INTO AtendimentoEstatistica 
+                        (Atendimento,Topico,SituacaoOS,UsuarioOS,Grupo,Inicio,UsuarioInicio) 
+                        VALUES (:atendimento,:topico,:situacaoOS,:usuarioOS,:grupo,now(),:usuarioInicio)");
+            $result2 = $statement2->execute([
+                'atendimento' => $data['numAtendimento'],
+                'topico' => $data['topico'],
+                'situacaoOS' => $data['situacaoOS'],
+                'usuarioOS' => $data['UltimoUsuarioDesignado'],
+                'grupo' => $grupo,
+                'usuarioInicio' => $data['UltimoUsuarioDesignado']
+                ]);
+
+            // Estatísticas Axes
+            $usuarios = $this->getUsuariosByEquipe($data['UltimoUsuarioDesignado']);
+            if (!empty($usuarios)) {
+                for ($i=0; $i < count($usuarios); $i++) {
+                    $statement2 = $this->pdoAxes
+                    ->prepare("INSERT INTO estatistica_usuarios 
+                                (usuario,atendimento,topico,inicio,fim,finalizado) 
+                                VALUES (:usuario,:atendimento,:topico,:inicio,now(),'N')");
+                    $result2 = $statement2->execute([
+                        'usuario' => $usuarios[$i],
+                        'atendimento' => $data['numAtendimento'],
+                        'topico' => $data['topico'],
+                        'inicio' => $dataInicio
+                        ]);
+                }
+            } else {
+                $statement2 = $this->pdoAxes
+                ->prepare("INSERT INTO estatistica_usuarios 
+                            (usuario,atendimento,topico,inicio,fim,finalizado) 
+                            VALUES (:usuario,:atendimento,:topico,:inicio,now(),'N')");
+                $result2 = $statement2->execute([
+                    'usuario' => $data['UltimoUsuarioDesignado'],
+                    'atendimento' => $data['numAtendimento'],
+                    'topico' => $data['topico'],
+                    'inicio' => $dataInicio
+                    ]);
+            }
+        }
         return $result;
     }
 

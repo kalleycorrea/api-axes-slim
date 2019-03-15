@@ -76,6 +76,26 @@ final class AtendimentoController
         return $response;
     }
 
+    public function capturarAtendimento(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $atendimentosDAO = new AtendimentosDAO();
+        $result = $atendimentosDAO->capturarAtendimento($data);
+
+        if ($result == TRUE){
+            $response = $response->withJson([
+                "status" => "success",
+                'message' => "Atendimento Capturado"
+            ], 200);
+        }else{
+            $response = $response->withJson([
+                "status" => "error",
+                'message' => "Falha ao Capturar Atendimento"
+            ], 502); //502 Bad Gateway
+        }
+        return $response;
+    }
+
     public function getOcorrencias(Request $request, Response $response, array $args): Response
     {
         $data = $request->getParsedBody();
