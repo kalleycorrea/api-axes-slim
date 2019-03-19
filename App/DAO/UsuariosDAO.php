@@ -14,7 +14,8 @@ class UsuariosDAO extends Conexao
         $urlImgUserRbx = getenv('URL_IMG_USER_RBX');
 
         $statement = $this->pdoRbx
-            ->prepare("SELECT usuario, Terminal senha, Nome, idgrupo, '' as equipe, '' as nomeequipe, MobileDeviceId, 
+            ->prepare("SELECT usuario, Terminal senha, Nome, idgrupo, MobileDeviceId, 
+            '' as equipe, '' as nomeequipe, '' as tecnicoequipe, 
             if(master='S','G',if(perfil=19,'A','T')) as tipo 
             FROM usuarios 
             WHERE usuario = :usuario AND Terminal = :senha AND situacao = 'A' ;");
@@ -31,6 +32,9 @@ class UsuariosDAO extends Conexao
                 if (!empty($equipe)) {
                     $usuario[$i]['equipe'] = $equipe[0]['equipe'];
                     $usuario[$i]['nomeequipe'] = $equipe[0]['nome'];
+                    if ($usuario[$i]['tipo'] == 'A'){
+                        $usuario[$i]['tecnicoequipe'] = $this->getTecnicoEquipe($equipe[0]['equipe']);
+                    }
                 }
             }
         }
@@ -108,7 +112,7 @@ class UsuariosDAO extends Conexao
         return $result;
     }
 
-    private function getEquipeByUsuario($usuario)
+    public function getEquipeByUsuario($usuario)
     {
         $statement = $this->pdoAxes->prepare("select u.equipe, e.nome from usuarios u left join equipes e 
         on u.equipe = e.id where usuario='".$usuario."'");
@@ -121,7 +125,7 @@ class UsuariosDAO extends Conexao
         // return '';
     }
 
-    private function getUsuariosByEquipe($equipe, $fetchStyle): array
+    public function getUsuariosByEquipe($equipe, $fetchStyle): array
     {
         $statement = $this->pdoAxes->prepare("select usuario from usuarios where equipe = ".$equipe);
         $statement->execute();
@@ -133,6 +137,19 @@ class UsuariosDAO extends Conexao
         // }
         $result = $statement->fetchAll($fetchStyle);
         return $result;
+    }
+
+    public function getTecnicoEquipe($idEquipe) {
+        $usuarios = $this->getUsuariosByEquipe($idEquipe, \PDO::FETCH_COLUMN);
+        $strUsuarios = "'".implode("','",$usuarios)."'";
+        $strSQL = "select a.usuario from (select usuario, if(master='S','G',if(perfil=19,'A','T')) as tipo FROM usuarios WHERE usuario in (".$strUsuarios.")) as a where a.tipo = 'T' limit 1";
+        $statement = $this->pdoRbx->prepare($strSQL);
+        $statement->execute();
+        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        if (!empty($result)) {
+            return $result[0]['usuario'];
+        }
+        return '';
     }
 
     public function getGrupoUsuarios(): array
@@ -178,7 +195,7 @@ class UsuariosDAO extends Conexao
         return $equipes;
     }
 
-    private function getCoordenadasEquipe($idEquipe) {
+    public function getCoordenadasEquipe($idEquipe) {
         $usuarios = $this->getUsuariosByEquipe($idEquipe, \PDO::FETCH_COLUMN);
         $strUsuarios = "'".implode("','",$usuarios)."'";
         $strSQL = "select usuario, Latitude, Longitude, MobileLastDataReceived 
@@ -212,7 +229,7 @@ class UsuariosDAO extends Conexao
         return $usuariosEquipe;
     }
 
-    private function getQuantAtendimentos($pUsuario) {
+    public function getQuantAtendimentos($pUsuario) {
         $strSQL = "select Usu_Designado, count(*) as atendimentos from isupergaus.Atendimentos 
             where Usu_Designado = '".$pUsuario."' and Situacao in ('A','E') group by Usu_Designado";
         $statement = $this->pdoRbx->prepare($strSQL);
@@ -224,7 +241,7 @@ class UsuariosDAO extends Conexao
         return 0;
     }
 
-    private function getPerfil($pUsuario) {
+    public function getPerfil($pUsuario) {
         $strSQL = "select if(ifnull(perfil,0) = 7, 'Técnico', if(ifnull(perfil,0) = 19, 'Auxiliar', '')) as perfil 
             from isupergaus.usuarios where usuario='".$pUsuario."'";
         $statement = $this->pdoRbx->prepare($strSQL);
@@ -281,7 +298,7 @@ class UsuariosDAO extends Conexao
         return $result;
     }
 
-    private function UsuarioTemEquipe($usuario): bool
+    public function UsuarioTemEquipe($usuario): bool
     {
         $return = FALSE;
         $statement = $this->pdoAxes->prepare("select usuario from usuarios where equipe is not null and usuario = '".$usuario."'");
@@ -293,7 +310,7 @@ class UsuariosDAO extends Conexao
         return $return;
     }
 
-    private function UsuarioExiste($usuario): bool
+    public function UsuarioExiste($usuario): bool
     {
         $return = FALSE;
         $statement = $this->pdoAxes->prepare("select usuario from usuarios where usuario = '".$usuario."'");

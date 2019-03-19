@@ -3,6 +3,7 @@
 namespace App\DAO;
 use phpseclib\Net\SSH2;
 use phpseclib\Net\SFTP;
+use App\DAO\UsuariosDAO;
 
 class AtendimentosDAO extends Conexao
 {
@@ -137,8 +138,9 @@ class AtendimentosDAO extends Conexao
 
         // Set Equipe do Usuário Designado e MTBF
         if (!empty($atendimentos)){
+            $usuarioDAO = new UsuariosDAO();
             for ($i=0; $i < count($atendimentos); $i++) {
-                $equipe = $this->getEquipeByUsuario($atendimentos[$i]['Usu_Designado']);
+                $equipe = $usuarioDAO->getEquipeByUsuario($atendimentos[$i]['Usu_Designado']);
                 if (!empty($equipe)) {
                     $atendimentos[$i]['equipe'] = $equipe[0]['equipe'];
                     $atendimentos[$i]['nomeequipe'] = $equipe[0]['nome'];
@@ -156,15 +158,6 @@ class AtendimentosDAO extends Conexao
             where u.equipe = (select equipe from usuarios where usuario='".$usuario."')");
         $statement->execute();
         $result = $statement->fetchAll(\PDO::FETCH_COLUMN);
-        return $result;
-    }
-
-    private function getEquipeByUsuario($usuario)
-    {
-        $statement = $this->pdoAxes->prepare("select u.equipe, e.nome from usuarios u left join equipes e 
-        on u.equipe = e.id where usuario='".$usuario."'");
-        $statement->execute();
-        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
         return $result;
     }
 
@@ -271,31 +264,30 @@ class AtendimentosDAO extends Conexao
     {
         $result = FALSE;
         $strSQL = '';
-        if (empty($data['usuarioDesignado'])) {
-            $strSQL = "UPDATE Atendimentos SET Grupo_Designado = ".$data['grupoDesignado'].", Usu_Designado='' 
-            WHERE Numero = ".$data['numAtendimento'];
-        } else {
-            $strSQL = "UPDATE Atendimentos SET Usu_Designado = '".$data['usuarioDesignado']."', Grupo_Designado=0 
-            WHERE Numero = ".$data['numAtendimento'];
+        $usuario = $data['usuario'];
+        // Pega o técnico da equipe
+        $usuarioDAO = new UsuariosDAO();
+        if ($usuarioDAO->getPerfil($usuario) == 'Auxiliar'){
+            $equipe = $usuarioDAO->getEquipeByUsuario($usuario);
+            if (!empty($equipe)) {
+                $usuario = $usuarioDAO->getTecnicoEquipe($equipe[0]['equipe']);
+            }
         }
+
+        $strSQL = "UPDATE Atendimentos SET Usu_Designado = '".$usuario."', Grupo_Designado=0, Situacao = 'A' 
+        WHERE Numero = ".$data['numAtendimento'];
         $statement = $this->pdoRbx->prepare($strSQL);
         $result = $statement->execute();
 
         if ($result == TRUE) {
             // Adiciona Ocorrência
-            $descricao = '';
-            if (empty($data['usuarioDesignado'])) {
-                $descGrupoDesignado = $this->getDescricaoGrupo($data['grupoDesignado']);
-                $descricao = "Atendimento designado de <b>".$data['UltimoUsuarioDesignado']."</b> para <b>".$descGrupoDesignado."</b><BR>";
-            } else {
-                $descricao = "Atendimento designado de <b>".$data['UltimoUsuarioDesignado']."</b> para <b>".$data['usuarioDesignado']."</b><BR>";
-            }
+            $descricao = "Atendimento capturado";
             $statement2 = $this->pdoRbx
             ->prepare("INSERT INTO AtendUltAlteracao (Atendimento, Usuario, Descricao, Data, Modo) 
                         VALUES (:atendimento, :usuario, :descricao, now(), 'A')");
             $result2 = $statement2->execute([
                 'atendimento' => $data['numAtendimento'],
-                'usuario' => $data['usuario'],
+                'usuario' => $usuario,
                 'descricao' => $descricao
                 ]);
 
@@ -308,7 +300,6 @@ class AtendimentosDAO extends Conexao
                 $idEstatistica = $ultimaEstatistica[0]['Id'];
                 $dataInicio = $ultimaEstatistica[0]['Inicio'];
             }
-            //$idEstatistica = $this->getUltimaEstatistica($data['numAtendimento']);
             if (!empty($idEstatistica)) {
                 $statement2 = $this->pdoRbx
                 ->prepare("UPDATE AtendimentoEstatistica 
@@ -317,15 +308,11 @@ class AtendimentosDAO extends Conexao
                                 UsuarioFim = :usuariofim 
                             WHERE Id = :id");
                 $result2 = $statement2->execute([
-                    'usuariofim' => $data['UltimoUsuarioDesignado'],
+                    'usuariofim' => $usuario,
                     'id' => $idEstatistica
                 ]);
             }
             // Em seguida cria um novo registro
-            $grupo = 0;
-            if (empty($data['usuarioDesignado'])) {
-                $grupo = $data['grupoDesignado'];
-            }
             $statement2 = $this->pdoRbx
             ->prepare("INSERT INTO AtendimentoEstatistica 
                         (Atendimento,Topico,SituacaoOS,UsuarioOS,Grupo,Inicio,UsuarioInicio) 
@@ -334,13 +321,13 @@ class AtendimentosDAO extends Conexao
                 'atendimento' => $data['numAtendimento'],
                 'topico' => $data['topico'],
                 'situacaoOS' => $data['situacaoOS'],
-                'usuarioOS' => $data['UltimoUsuarioDesignado'],
-                'grupo' => $grupo,
-                'usuarioInicio' => $data['UltimoUsuarioDesignado']
+                'usuarioOS' => $usuario,
+                'grupo' => 0,
+                'usuarioInicio' => $usuario
                 ]);
 
             // Estatísticas Axes
-            $usuarios = $this->getUsuariosByEquipe($data['UltimoUsuarioDesignado']);
+            $usuarios = $this->getUsuariosByEquipe($usuario);
             if (!empty($usuarios)) {
                 for ($i=0; $i < count($usuarios); $i++) {
                     $statement2 = $this->pdoAxes
@@ -360,7 +347,7 @@ class AtendimentosDAO extends Conexao
                             (usuario,atendimento,topico,inicio,fim,finalizado) 
                             VALUES (:usuario,:atendimento,:topico,:inicio,now(),'N')");
                 $result2 = $statement2->execute([
-                    'usuario' => $data['UltimoUsuarioDesignado'],
+                    'usuario' => $usuario,
                     'atendimento' => $data['numAtendimento'],
                     'topico' => $data['topico'],
                     'inicio' => $dataInicio
@@ -827,11 +814,21 @@ class AtendimentosDAO extends Conexao
     {
         $result = FALSE;
         $strSQL = '';
+        $usuariodesignado = $data['usuarioDesignado'];
+        // Pega o técnico da equipe
+        $usuarioDAO = new UsuariosDAO();
+        if ($usuarioDAO->getPerfil($usuariodesignado) == 'Auxiliar'){
+            $equipe = $usuarioDAO->getEquipeByUsuario($usuariodesignado);
+            if (!empty($equipe)) {
+                $usuariodesignado = $usuarioDAO->getTecnicoEquipe($equipe[0]['equipe']);
+            }
+        }
+
         if (empty($data['usuarioDesignado'])) {
             $strSQL = "UPDATE Atendimentos SET Grupo_Designado = ".$data['grupoDesignado'].", Usu_Designado='' 
             WHERE Numero = ".$data['numAtendimento'];
         } else {
-            $strSQL = "UPDATE Atendimentos SET Usu_Designado = '".$data['usuarioDesignado']."', Grupo_Designado=0 
+            $strSQL = "UPDATE Atendimentos SET Usu_Designado = '".$usuariodesignado."', Grupo_Designado=0 
             WHERE Numero = ".$data['numAtendimento'];
         }
         $statement = $this->pdoRbx->prepare($strSQL);
@@ -844,7 +841,7 @@ class AtendimentosDAO extends Conexao
                 $descGrupoDesignado = $this->getDescricaoGrupo($data['grupoDesignado']);
                 $descricao = "Atendimento designado de <b>".$data['UltimoUsuarioDesignado']."</b> para <b>".$descGrupoDesignado."</b><BR>";
             } else {
-                $descricao = "Atendimento designado de <b>".$data['UltimoUsuarioDesignado']."</b> para <b>".$data['usuarioDesignado']."</b><BR>";
+                $descricao = "Atendimento designado de <b>".$data['UltimoUsuarioDesignado']."</b> para <b>".$usuariodesignado."</b><BR>";
             }
             $statement2 = $this->pdoRbx
             ->prepare("INSERT INTO AtendUltAlteracao (Atendimento, Usuario, Descricao, Data, Modo) 
@@ -929,6 +926,16 @@ class AtendimentosDAO extends Conexao
     public function saveEncerramento($data): bool
     {
         $result = FALSE;
+        $usuariodesignado = $data['usuarioDesignado'];
+        // Pega o técnico da equipe
+        $usuarioDAO = new UsuariosDAO();
+        if ($usuarioDAO->getPerfil($usuariodesignado) == 'Auxiliar'){
+            $equipe = $usuarioDAO->getEquipeByUsuario($usuariodesignado);
+            if (!empty($equipe)) {
+                $usuariodesignado = $usuarioDAO->getTecnicoEquipe($equipe[0]['equipe']);
+            }
+        }
+
         $statement = $this->pdoRbx
         ->prepare("UPDATE Atendimentos 
                     SET Causa = :causa, 
@@ -942,7 +949,7 @@ class AtendimentosDAO extends Conexao
         $result = $statement->execute([
             'causa' =>  $data['causa'],
             'solucao' =>  $data['solucao'],
-            'usuario' => $data['usuarioDesignado'],
+            'usuario' => $usuariodesignado,
             'numero' => $data['numAtendimento']
         ]);
 
@@ -954,7 +961,7 @@ class AtendimentosDAO extends Conexao
                         VALUES (:atendimento, :usuario, :descricao, now(), 'A')");
             $result2 = $statement2->execute([
                 'atendimento' => $data['numAtendimento'],
-                'usuario' => $data['usuarioDesignado'],
+                'usuario' => $usuariodesignado,
                 'descricao' => $descricao
                 ]);
             // Adiciona Ocorrência
@@ -964,7 +971,7 @@ class AtendimentosDAO extends Conexao
                         VALUES (:atendimento, :usuario, :descricao, now(), 'A')");
             $result2 = $statement2->execute([
                 'atendimento' => $data['numAtendimento'],
-                'usuario' => $data['usuarioDesignado'],
+                'usuario' => $usuariodesignado,
                 'descricao' => $descricao
                 ]);
             
@@ -986,13 +993,13 @@ class AtendimentosDAO extends Conexao
                                 UsuarioFim = :usuariofim 
                             WHERE Id = :id");
                 $result2 = $statement2->execute([
-                    'usuariofim' => $data['usuarioDesignado'],
+                    'usuariofim' => $usuariodesignado,
                     'id' => $idEstatistica
                 ]);
             }
 
             // Estatísticas Axes
-            $usuarios = $this->getUsuariosByEquipe($data['usuarioDesignado']);
+            $usuarios = $this->getUsuariosByEquipe($usuariodesignado);
             if (!empty($usuarios)) {
                 for ($i=0; $i < count($usuarios); $i++) {
                     $statement2 = $this->pdoAxes
@@ -1012,7 +1019,7 @@ class AtendimentosDAO extends Conexao
                             (usuario,atendimento,topico,inicio,fim,finalizado) 
                             VALUES (:usuario,:atendimento,:topico,:inicio,now(),'S')");
                 $result2 = $statement2->execute([
-                    'usuario' => $data['usuarioDesignado'],
+                    'usuario' => $usuariodesignado,
                     'atendimento' => $data['numAtendimento'],
                     'topico' => $data['topico'],
                     'inicio' => $dataInicio

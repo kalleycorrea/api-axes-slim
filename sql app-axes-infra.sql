@@ -9,6 +9,8 @@ u.usuario in ('antonio.giliard', 'escossio.farias', 'amandabonfim') -- 'kalley'
 -- (u.idgrupo = 4 and u.perfil in (7,19)) or (u.idgrupo = 4 and u.master = 'S') or (u.usuario='kalley')
 order by u.Nome, u.perfil;
 
+select a.usuario from (select usuario, if(master='S','G',if(perfil=19,'A','T')) as tipo FROM usuarios WHERE usuario in ('matheus.henrique','james.marques')) as a where a.tipo = 'T' limit 1;
+
 select * from isupergaus.MobileDevice;
 select * from isupergaus.MobileAppWorkforce;
 select * from isupergaus.MobileDeviceLog;
@@ -148,7 +150,8 @@ select concat('https://rbx.axes.com.br/routerbox/file/docarquivos/', Arquivo) as
 select * from Arquivo where Tipo='A' and NomeArquivo='100903-Assinatura.jpg' and Codigo=100903;
 
 -- OCORRÊNCIAS
-select * from isupergaus.AtendUltAlteracao where atendimento=100903; -- 93639; -- 94982; -- 98762; -- 101025;
+select * from isupergaus.AtendUltAlteracao where atendimento=107415; -- 100903 93639; -- 94982; -- 98762; -- 101025;
+select * from isupergaus.AtendUltAlteracao where descricao like '%Capturado%';
 select descricao, count(*) from isupergaus.AtendUltAlteracao where modo='M' and descricao like '%<br />%' group by descricao;
 select Id, Atendimento, Usuario, Data, Descricao, Modo from isupergaus.AtendUltAlteracao where Atendimento = 94982;
 -- delete from isupergaus.AtendUltAlteracao where 
@@ -269,7 +272,7 @@ left join isupergaus.CamposComplementaresValores c on a.Numero = c.Chave and c.T
 where a.Topico in (120,95,27,6,41,10,11,12,13,94,119,35,36,38,45,46,18,19) and c.Complemento = 38;
 
 -- ESTATÍSTICA
-SELECT * FROM isupergaus.AtendimentoEstatistica es where es.Atendimento=105716; -- 100903 100905 104186 100905 100903 100776;
+SELECT * FROM isupergaus.AtendimentoEstatistica es where es.Atendimento=107415; -- 105716 100903 100905 104186 100905 100903 100776;
 SELECT * FROM isupergaus.AtendimentoEstatistica es where es.Grupo <> 0;
 select * from isupergaus.UsuariosGrupoSetor;
 -- Id,Atendimento,Topico,SituacaoOS,UsuarioOS,Grupo,Inicio,Fim,Duracao,UsuarioInicio,UsuarioFim
