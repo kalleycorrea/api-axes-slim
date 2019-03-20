@@ -231,7 +231,7 @@ class UsuariosDAO extends Conexao
 
     public function getQuantAtendimentos($pUsuario) {
         $strSQL = "select Usu_Designado, count(*) as atendimentos from isupergaus.Atendimentos 
-            where Usu_Designado = '".$pUsuario."' and Situacao in ('A','E') group by Usu_Designado";
+            where Usu_Designado = '".$pUsuario."' and Situacao in ('A','E','') group by Usu_Designado";
         $statement = $this->pdoRbx->prepare($strSQL);
         $statement->execute();
         $result = $statement->fetchAll(\PDO::FETCH_ASSOC);

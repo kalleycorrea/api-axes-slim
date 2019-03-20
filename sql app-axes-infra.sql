@@ -126,14 +126,16 @@ WHERE a.Data_Prox is not null
     )*/
 order by a.Prioridade, date_format(concat(a.Data_AB," ",a.Hora_AB), "%d/%m/%Y %H:%i:%s");
 
-update Atendimentos set situacao = '', Usuario_BX='', Data_BX = default, Hora_BX = default, Solucao = '' where numero=107415;
+select * from isupergaus.Atendimentos where Grupo_Designado = 0 && Usu_Designado = '';
+-- update Atendimentos set situacao = '', Usuario_BX='', Data_BX = default, Hora_BX = default, Solucao = '' where numero=107415;
+-- update Atendimentos set Grupo_Designado = 4, Usu_Designado='' where numero=107415;
 
 -- SLA
 select CONVERT(isupergaus.rbx_sla(96833, 'N') USING utf8) SLA;
 
 -- ANEXOS
 select a.Numero, a.Situacao from isupergaus.Atendimentos a where a.Situacao = 'A' and a.Numero=100903;
-select * from isupergaus.Arquivo aq where aq.Codigo=100903; -- or aq.Tipo='A';
+select * from isupergaus.Arquivo aq where aq.Codigo=99758; -- 100903 or aq.Tipo='A';
 -- Arquivo.Codigo = Atendimento.Numero
 -- Endereço web arquivos: https://rbx.axes.com.br/routerbox/file/docarquivos/Screenshot_20190102-183729.png
 -- Local salvamento arquivos: /var/www/routerbox/file/docarquivos/
@@ -181,7 +183,7 @@ from CamposComplementares a
 left join CamposComplementaresValores b on a.Codigo = b.Complemento 
 left join Contratos c on b.Chave = c.Numero 
 left join Atendimentos d on b.Chave = d.Contrato 
-where a.Tabela = 'Contratos' and a.Codigo < 45 and d.Numero = 101248 
+where a.Tabela = 'Contratos' and a.Codigo in (31,32,33,41,42,39,18,19,25,40,22,23,43,44) and d.Numero = 101248 
 order by a.Codigo;
 
 select * from CamposComplementaresValores where ifnull(Chave, '0') = '0';
@@ -189,20 +191,20 @@ select TipoDado, count(*) from CamposComplementares group by TipoDado;
 select * from CamposComplementares where TipoDado='M';
 /*
 Código dos Dados Adicionais do Contrato
-31 CTO
-32 PORTA CTO
-33 PORTA SPLITTER
-41 POTÊNCIA SPLITTER (dBm)
-42 POTÊNCIA CLIENTE (dBm)
-39 CENTRAL
-18 SLOT
-19 PON
-25 MARCA ONU
-40 TIPO ONU
-22 SN
-23 MAC
-43 TIPO CABO
-44 METRAGEM TOTAL
+*31 CTO
+*32 PORTA CTO
+*33 PORTA SPLITTER
+*41 POTÊNCIA SPLITTER (dBm)
+*42 POTÊNCIA CLIENTE (dBm)
+*39 CENTRAL
+*18 SLOT
+*19 PON
+*25 MARCA ONU
+*40 TIPO ONU
+*22 SN
+*23 MAC
+*43 TIPO CABO
+*44 METRAGEM TOTAL
 
 46 ID TALK VSC
 48 SENHA TALK VSC

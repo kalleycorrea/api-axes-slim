@@ -389,9 +389,8 @@ class AtendimentosDAO extends Conexao
     {
         $strSQL = "select a.Codigo CodigoCampo, a.Nome, a.TipoDado, a.Lista, a.Tabela, a.Obrigatorio, 
         '' Valor, '' Id 
-        -- a.ListaDesc, a.Tamanho, a.Ajuda 
         from isupergaus.CamposComplementares a 
-        where a.Tabela = 'Contratos' and a.Codigo < 45 order by a.Codigo";
+        where a.Tabela = 'Contratos' and a.Codigo in (31,32,33,41,42,39,18,19,25,40,22,23,43,44) order by a.Codigo";
 
         $statement = $this->pdoRbx->prepare($strSQL);
         $statement->execute();
@@ -419,6 +418,8 @@ class AtendimentosDAO extends Conexao
     {
         $result = FALSE;
         $contrato = $pDadosAdicionais[0]['contrato'] ?? '';
+        $atendimento = $pDadosAdicionais[0]['numAtendimento'] ?? '';
+        $usuario = $pDadosAdicionais[0]['usuario'] ?? '';
 
         if (is_null($contrato) || empty($contrato)) {
             return FALSE;
@@ -446,6 +447,18 @@ class AtendimentosDAO extends Conexao
                     'valor' => $rows['Valor'],
                     'id' => $rows['Id'] 
                     ]);
+                }
+                // Adiciona Ocorrência
+                if ($result == TRUE) {
+                    $descricao = 'Dados Adicionais do Contrato: <b>'.$rows['Nome'] .' '.$rows['Valor'].'</b>';
+                    $statement2 = $this->pdoRbx
+                    ->prepare("INSERT INTO AtendUltAlteracao (Atendimento, Usuario, Descricao, Data, Modo) 
+                                VALUES (:atendimento, :usuario, :descricao, now(), 'M')");
+                    $result2 = $statement2->execute([
+                        'atendimento' => $atendimento,
+                        'usuario' => $usuario,
+                        'descricao' => $descricao
+                        ]);
                 }
             }
         }
